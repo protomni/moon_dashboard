@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Moon Dashboard</title>
     <style>
         :root { 
@@ -14,44 +14,69 @@
             --text-dim: #8892b0;
         }
 
+        * { box-sizing: border-box; }
+
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background: var(--bg); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 20px; 
+            padding: 0; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
+            justify-content: center;
+            min-height: 100dvh; /* Altura dinâmica para mobile */
             overflow: hidden;
-            height: 100vh;
         }
 
-        h1 { font-size: 1.5rem; margin-bottom: 5px; color: var(--accent); }
-
-        .card { 
-            background: var(--card); 
-            padding: 20px; 
-            border-radius: 16px; 
-            width: 100%; 
-            max-width: 350px; 
-            text-align: center; 
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        #compass-svg { 
-            width: 85%; 
-            max-width: 280px; 
-            transition: transform 0.15s ease-out; 
-            margin: 30px 0; 
-        }
-
+        /* Tela de Início (Overlay) */
         #overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); z-index: 1000; 
-            display: flex; flex-direction: column; justify-content: center; 
-            align-items: center; padding: 40px; text-align: center; 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            padding: 20px; text-align: center; 
+        }
+
+        #overlay h1 { font-size: 1.8rem; margin: 10px 0; color: var(--accent); }
+        #overlay p { 
+            color: var(--text-dim); 
+            max-width: 280px; 
+            line-height: 1.4; 
+            margin-bottom: 30px; 
+            font-size: 1rem;
+        }
+
+        /* Painel Principal */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 20px;
+        }
+
+        h1.main-title { font-size: 1.4rem; margin: 0; color: var(--accent); }
+        .location { color: var(--text-dim); margin-bottom: 10px; font-size: 0.85rem; }
+
+        #compass-svg { 
+            width: 70vh; /* Baseado na altura para não sumir em telas pequenas */
+            max-width: 85vw; 
+            max-height: 300px;
+            transition: transform 0.15s ease-out; 
+            margin: 20px 0; 
+        }
+
+        .card { 
+            background: var(--card); 
+            padding: 15px; 
+            border-radius: 16px; 
+            width: 100%; 
+            max-width: 320px; 
+            text-align: center; 
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
 
         button { 
@@ -63,55 +88,57 @@
             font-size: 1.1rem; 
             font-weight: 600; 
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
-            transition: transform 0.2s;
+            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        button:active { transform: scale(0.95); }
+        button:active { transform: scale(0.96); }
 
-        .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); margin-bottom: 5px; }
-        .value { font-size: 1.6rem; font-weight: 700; }
-        #status { font-size: 0.8rem; color: var(--accent); margin-top: 15px; font-weight: 500; }
+        .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+        .value { font-size: 1.4rem; font-weight: 700; margin-top: 5px; }
+        #status { font-size: 0.75rem; color: var(--accent); margin-top: 10px; font-weight: 500; }
+
+        /* Ajustes para modo Paisagem (Deitado) */
+        @media (orientation: landscape) and (max-height: 500px) {
+            .container { flex-direction: row; justify-content: center; gap: 20px; }
+            #compass-svg { max-height: 180px; margin: 0; }
+            .main-title, .location { display: none; } /* Oculta títulos para ganhar espaço */
+        }
     </style>
 </head>
 <body>
     <div id="overlay">
-        <div style="font-size: 4rem; margin-bottom: 20px;">🌙</div>
+        <div style="font-size: 3.5rem;">🌙</div>
         <h1>Moon Dashboard</h1>
-        <p style="color: var(--text-dim); line-height: 1.5; margin-bottom: 30px;">
-            Toque abaixo para sincronizar os sensores e localizar a Lua em tempo real.
-        </p>
+        <p>Toque abaixo para ativar os sensores e localizar a Lua no céu.</p>
         <button id="btn">INICIAR MONITOR</button>
     </div>
 
-    <h1>Moon Dashboard</h1>
-    <p style="color: var(--text-dim); margin: 0 0 10px 0; font-size: 0.9rem;">Rio de Janeiro, RJ</p>
+    <div class="container">
+        <h1 class="main-title">Moon Dashboard</h1>
+        <p class="location">Rio de Janeiro, RJ</p>
 
-    <svg id="compass-svg" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-        <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
-        
-        <text x="100" y="30" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
-        <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
-        <text x="100" y="180" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
-        <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
-        
-        <line x1="100" y1="40" x2="100" y2="160" stroke="rgba(255,255,255,0.05)" />
-        <line x1="40" y1="100" x2="160" y2="100" stroke="rgba(255,255,255,0.05)" />
+        <svg id="compass-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+            <text x="100" y="30" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
+            <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
+            <text x="100" y="180" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
+            <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
+            
+            <g id="moon-group" transform="rotate(110, 100, 100)">
+                <circle fill="var(--lua)" cx="100" cy="20" r="10" />
+                <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
+            </g>
+            
+            <polygon points="100,85 105,100 95,100" fill="var(--accent)" />
+            <circle fill="white" cx="100" cy="100" r="3" />
+        </svg>
 
-        <g id="moon-group" transform="rotate(110, 100, 100)">
-            <circle id="moon" fill="var(--lua)" cx="100" cy="20" r="10" />
-            <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
-        </g>
-        
-        <polygon points="100,85 105,100 95,100" fill="var(--accent)" />
-        <circle fill="white" cx="100" cy="100" r="3" />
-    </svg>
-
-    <div class="card">
-        <div class="label">Direção da Lua Agora</div>
-        <div class="value">Leste-Sudeste</div>
-        <div id="status">Sensores prontos</div>
+        <div class="card">
+            <div class="label">Direção da Lua Agora</div>
+            <div class="value">Leste-Sudeste</div>
+            <div id="status">Sensores prontos</div>
+        </div>
     </div>
 
     <script>
@@ -127,10 +154,8 @@
                     const p = await DeviceOrientationEvent.requestPermission();
                     if (p === 'granted') {
                         window.addEventListener('deviceorientation', handle, true);
-                    } else {
-                        status.innerText = "Acesso negado";
                     }
-                } catch (e) { status.innerText = "Erro de sensor"; }
+                } catch (e) { console.error(e); }
             } else {
                 window.addEventListener('deviceorientationabsolute', handle, true);
                 window.addEventListener('deviceorientation', handle, true);
@@ -140,7 +165,6 @@
         function handle(e) {
             let h = e.webkitCompassHeading || (360 - e.alpha);
             if (h) {
-                // Rotaciona a bússola para que o Norte aponte para o Norte real
                 svg.style.transform = `rotate(${-h}deg)`;
                 status.innerText = "Bússola ativa: " + Math.round(h) + "°";
             }
