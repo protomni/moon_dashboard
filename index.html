@@ -4,37 +4,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b10</title>
+    <title>Moon Dashboard V0.1b11</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#05070a">
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/512/emoji_u1f315.png">
-    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/512/emoji_u1f315.png">
 
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding-bottom: 20px; }
-        
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
-        
         .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
-        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
+        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
         .source-btn.active { background: var(--accent); color: white; }
-
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
-        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
+        #compass-svg { width: 65vw; max-width: 210px; margin: 10px 0; transition: transform 0.1s linear; }
         .cardinal-letter { font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
-
-        .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
         .label { font-size: 0.6rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
         .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
-        .sub-info { font-size: 0.8rem; color: var(--text); margin-top: 5px; }
-        
-        #start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 30px; }
-        .moon-phase-icon { font-size: 2.5rem; margin: 5px 0; }
+        .sub-info { font-size: 0.75rem; color: var(--text); margin-top: 5px; }
+        #start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
+        .moon-phase-icon { font-size: 2.8rem; margin: 5px 0; filter: drop-shadow(0 0 8px rgba(253, 253, 150, 0.3)); }
     </style>
 </head>
 <body>
@@ -42,9 +36,9 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1 style="color:var(--accent); margin: 0; font-size: 2rem;">Moon Dashboard</h1>
-        <p style="color:var(--dim); margin-top: 5px;">Monitoramento Astral de Precisão</p>
-        <button id="start-btn">INICIAR MONITOR</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b10</div>
+        <p style="color:var(--dim); margin-top: 5px;">Precisão Astronômica V0.1b11</p>
+        <button id="start-btn">SINCRONIZAR AGORA</button>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b11</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -66,19 +60,19 @@
         </svg>
 
         <div class="card">
-            <div class="label" id="source-label">Direção da Lua (Offline)</div>
-            <div class="value" id="moon-direction-text">Leste</div>
-            <div id="moon-details" class="sub-info">Elevação: -- | Azimute: --</div>
+            <div class="label" id="source-label">Direção da Lua</div>
+            <div class="value" id="moon-direction-text">Calculando...</div>
+            <div id="moon-details" class="sub-info">Elev: -- | Az: --</div>
         </div>
 
         <div class="card">
-            <div class="label">Fase Atual</div>
+            <div class="label">Fase e Iluminação</div>
             <div id="phase-icon" class="moon-phase-icon">🌓</div>
-            <div class="value" id="phase-name">Calculando...</div>
-            <div id="phase-dates" class="sub-info" style="font-size: 0.7rem; color: var(--dim);">Início: -- | Próxima: --</div>
+            <div class="value" id="phase-name">Ajustando...</div>
+            <div id="phase-extra" class="sub-info" style="color: var(--accent); font-weight: bold;">--% iluminada</div>
         </div>
 
-        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b10</div>
+        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b11</div>
     </div>
 
     <script>
@@ -88,63 +82,46 @@
         const detailsText = document.getElementById('moon-details');
         const phaseName = document.getElementById('phase-name');
         const phaseIcon = document.getElementById('phase-icon');
-        const phaseDates = document.getElementById('phase-dates');
+        const phaseExtra = document.getElementById('phase-extra');
         const locDisplay = document.getElementById('location-display');
-        const sourceLabel = document.getElementById('source-label');
         
-        const letterNG = document.getElementById('letter-n-group');
-        const letterLG = document.getElementById('letter-l-group');
-        const letterSG = document.getElementById('letter-s-group');
-        const letterOG = document.getElementById('letter-o-group');
+        const letterNG = document.getElementById('letter-n-group'), letterLG = document.getElementById('letter-l-group');
+        const letterSG = document.getElementById('letter-s-group'), letterOG = document.getElementById('letter-o-group');
         
         let currentH = 0, targetH = 0;
         let dataSource = 'offline';
         let userCoords = { lat: -22.96, lon: -43.22 };
 
-        function getMoonPhase(date) {
-            const cycle = 29.53058867;
-            const knownNewMoon = new Date('2024-01-11T11:57:00Z');
-            const msDiff = date - knownNewMoon;
-            const daysDiff = msDiff / (1000 * 60 * 60 * 24);
-            const phase = (daysDiff % cycle) / cycle;
-
-            let name, icon, startOffset;
-            if (phase < 0.03 || phase > 0.97) { name = "Lua Nova"; icon = "🌑"; startOffset = 0; }
-            else if (phase < 0.22) { name = "Lua Crescente"; icon = "🌒"; startOffset = 2; }
-            else if (phase < 0.28) { name = "Quarto Crescente"; icon = "🌓"; startOffset = 7; }
-            else if (phase < 0.47) { name = "Gibosa Crescente"; icon = "🌔"; startOffset = 9; }
-            else if (phase < 0.53) { name = "Lua Cheia"; icon = "🌕"; startOffset = 14; }
-            else if (phase < 0.72) { name = "Gibosa Minguante"; icon = "🌖"; startOffset = 17; }
-            else if (phase < 0.78) { name = "Quarto Minguante"; icon = "🌗"; startOffset = 22; }
-            else { name = "Lua Minguante"; icon = "🌘"; startOffset = 25; }
-
-            const lastNewMoon = new Date(knownNewMoon.getTime() + Math.floor(daysDiff / cycle) * cycle * 86400000);
-            const startDate = new Date(lastNewMoon.getTime() + startOffset * 86400000);
-            const nextPhaseDate = new Date(startDate.getTime() + 7.4 * 86400000);
-
-            return { name, icon, start: startDate.toLocaleDateString('pt-BR'), next: nextPhaseDate.toLocaleDateString('pt-BR') };
-        }
-
         function update() {
             const now = new Date();
             let az, el;
 
-            if (dataSource === 'offline') {
-                az = 108.2; el = 15.0;
-                sourceLabel.innerText = "Direção da Lua (Offline)";
-            } else {
-                az = 107.9; el = 12.0;
-                sourceLabel.innerText = "Direção da Lua (NASA)";
-            }
+            // Dados de Direção
+            if (dataSource === 'offline') { az = 108.2; el = 15.0; } 
+            else { az = 107.9; el = 12.0; }
 
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
             directionText.innerText = getDirLabel(az);
             detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Azimute: ${az.toFixed(1)}°`;
 
-            const moonInfo = getMoonPhase(now);
-            phaseName.innerText = moonInfo.name;
-            phaseIcon.innerText = moonInfo.icon;
-            phaseDates.innerText = `Início: ${moonInfo.start} | Próxima: ${moonInfo.next}`;
+            // FASE DA LUA COM SUNCALC (PRECISÃO ASTRONÔMICA)
+            const illumination = SunCalc.getMoonIllumination(now);
+            const fraction = Math.round(illumination.fraction * 100);
+            const phase = illumination.phase;
+
+            let name, icon;
+            if (phase < 0.03 || phase > 0.97) { name = "Lua Nova"; icon = "🌑"; }
+            else if (phase < 0.22) { name = "Lua Crescente"; icon = "🌒"; }
+            else if (phase < 0.28) { name = "Quarto Crescente"; icon = "🌓"; }
+            else if (phase < 0.47) { name = "Crescente Gibosa"; icon = "🌔"; }
+            else if (phase < 0.53) { name = "Lua Cheia"; icon = "🌕"; }
+            else if (phase < 0.72) { name = "Minguante Gibosa"; icon = "🌖"; }
+            else if (phase < 0.78) { name = "Quarto Minguante"; icon = "🌗"; }
+            else { name = "Lua Minguante"; icon = "🌘"; }
+
+            phaseName.innerText = name;
+            phaseIcon.innerText = icon;
+            phaseExtra.innerText = `${fraction}% Iluminada`;
         }
 
         function getDirLabel(az) {
@@ -152,23 +129,15 @@
             return sectors[Math.round(az / 45) % 8];
         }
 
-        // --- FUNÇÃO DE TROCA DE FONTE CORRIGIDA ---
-        function setSource(source) {
-            dataSource = source;
-            document.getElementById('btn-offline').classList.toggle('active', source === 'offline');
-            document.getElementById('btn-nasa').classList.toggle('active', source === 'nasa');
-            update();
-        }
-
-        document.getElementById('btn-offline').onclick = () => setSource('offline');
-        document.getElementById('btn-nasa').onclick = () => setSource('nasa');
+        document.getElementById('btn-offline').onclick = () => { dataSource = 'offline'; update(); };
+        document.getElementById('btn-nasa').onclick = () => { dataSource = 'nasa'; update(); };
 
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('overlay').style.display = 'none';
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     userCoords.lat = p.coords.latitude; userCoords.lon = p.coords.longitude;
-                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b10`;
+                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b11`;
                     update();
                 });
             }
@@ -186,10 +155,10 @@
             let diff = (targetH - currentH + 180) % 360 - 180;
             currentH += diff * 0.05;
             svg.style.transform = `rotate(${-currentH}deg)`;
-            letterNG.setAttribute('transform', `translate(100, 25) rotate(${currentH})`);
-            letterLG.setAttribute('transform', `translate(175, 105) rotate(${currentH})`);
-            letterSG.setAttribute('transform', `translate(100, 185) rotate(${currentH})`);
-            letterOG.setAttribute('transform', `translate(25, 105) rotate(${currentH})`);
+            [letterNG, letterLG, letterSG, letterOG].forEach(l => {
+                const parts = l.getAttribute('transform').split(' rotate');
+                l.setAttribute('transform', `${parts[0]} rotate(${currentH})`);
+            });
             requestAnimationFrame(smooth);
         }
     </script>
