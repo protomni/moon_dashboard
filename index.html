@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b7</title>
+    <title>Moon Dashboard V0.1b8</title>
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -19,6 +19,9 @@
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
         
+        /* Estilo para garantir que as letras cardinais sejam legíveis */
+        .cardinal-letter { font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
+
         .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .label { font-size: 0.6rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
         .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
@@ -31,11 +34,11 @@
 <body>
 
     <div id="overlay">
-        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌑</div>
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1 style="color:var(--accent); margin: 0; font-size: 2rem;">Moon Dashboard</h1>
         <p style="color:var(--dim); margin-top: 5px;">Ciclos e Direções Astronômicas</p>
         <button id="start-btn">INICIAR MONITOR</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b7</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b8</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -48,10 +51,12 @@
     <div class="container">
         <svg id="compass-svg" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
-            <text x="100" y="25" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
-            <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
-            <text x="100" y="185" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
-            <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
+            
+            <g id="letter-n-group" transform="translate(100, 25)"><text class="cardinal-letter">N</text></g>
+            <g id="letter-l-group" transform="translate(175, 105)"><text class="cardinal-letter">L</text></g>
+            <g id="letter-s-group" transform="translate(100, 185)"><text class="cardinal-letter">S</text></g>
+            <g id="letter-o-group" transform="translate(25, 105)"><text class="cardinal-letter">O</text></g>
+            
             <g id="moon-group"><circle fill="var(--lua)" cx="100" cy="20" r="10" /><circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" /></g>
             <polygon points="100,82 106,100 94,100" fill="var(--accent)" /><circle fill="white" cx="100" cy="100" r="3" />
         </svg>
@@ -69,7 +74,7 @@
             <div id="phase-dates" class="sub-info" style="font-size: 0.7rem; color: var(--dim);">Início: -- | Próxima: --</div>
         </div>
 
-        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b7</div>
+        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b8</div>
     </div>
 
     <script>
@@ -82,6 +87,12 @@
         const phaseDates = document.getElementById('phase-dates');
         const locDisplay = document.getElementById('location-display');
         const sourceLabel = document.getElementById('source-label');
+        
+        // Elementos das letras para rotação individual
+        const letterNG = document.getElementById('letter-n-group');
+        const letterLG = document.getElementById('letter-l-group');
+        const letterSG = document.getElementById('letter-s-group');
+        const letterOG = document.getElementById('letter-o-group');
         
         let currentH = 0, targetH = 0;
         let dataSource = 'offline';
@@ -153,7 +164,7 @@
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     userCoords.lat = p.coords.latitude; userCoords.lon = p.coords.longitude;
-                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b7`;
+                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b8`;
                     update();
                 });
             }
@@ -170,7 +181,17 @@
         function smooth() {
             let diff = (targetH - currentH + 180) % 360 - 180;
             currentH += diff * 0.05;
+            
+            // Gira o SVG da bússola para o Norte real
             svg.style.transform = `rotate(${-currentH}deg)`;
+            
+            // AJUSTE: Gira as letras no sentido oposto para mantê-las na vertical
+            // Usamos translate(-100, -25) para resetar o ponto de rotação para o centro da letra
+            letterNG.setAttribute('transform', `translate(100, 25) rotate(${currentH})`);
+            letterLG.setAttribute('transform', `translate(175, 105) rotate(${currentH})`);
+            letterSG.setAttribute('transform', `translate(100, 185) rotate(${currentH})`);
+            letterOG.setAttribute('transform', `translate(25, 105) rotate(${currentH})`);
+            
             requestAnimationFrame(smooth);
         }
     </script>
