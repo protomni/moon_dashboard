@@ -40,7 +40,7 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌙</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--text-dim); max-width: 250px;">Calibrando bússola de alta precisão...</p>
+        <p style="color:var(--text-dim); max-width: 250px;">Calibrando estabilizador de imagem...</p>
         <button id="btn">ENTRAR NO PAINEL</button>
     </div>
 
@@ -67,7 +67,7 @@
         <div class="card">
             <div class="label">Direção da Lua</div>
             <div class="value">Leste-Sudeste</div>
-            <div id="status">Sincronizando...</div>
+            <div id="status">Estabilizando...</div>
         </div>
     </div>
 
@@ -78,56 +78,51 @@
 
         let currentH = 0;
         let targetH = 0;
-        let sensorActive = false;
+        let lastUpdateTime = 0;
 
         btn.addEventListener('click', async () => {
             document.getElementById('overlay').style.display = 'none';
             
-            // Lógica de seleção de sensor única para evitar conflitos
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const response = await DeviceOrientationEvent.requestPermission();
-                    if (response === 'granted') {
-                        window.addEventListener('deviceorientation', onData, true);
-                        sensorActive = true;
-                    }
-                } catch (e) { status.innerText = "Erro no iOS"; }
-            } else if ('ondeviceorientationabsolute' in window) {
-                window.addEventListener('deviceorientationabsolute', onData, true);
-                sensorActive = true;
+                const response = await DeviceOrientationEvent.requestPermission();
+                if (response === 'granted') window.addEventListener('deviceorientation', onData, true);
             } else {
+                window.addEventListener('deviceorientationabsolute', onData, true);
                 window.addEventListener('deviceorientation', onData, true);
-                sensorActive = true;
             }
             
-            if (sensorActive) requestAnimationFrame(smoothLoop);
+            requestAnimationFrame(smoothLoop);
         });
 
         function onData(e) {
+            const now = Date.now();
+            // Limita a leitura do sensor para no máximo a cada 30ms (evita sobrecarga)
+            if (now - lastUpdateTime < 30) return;
+            lastUpdateTime = now;
+
             let heading = 0;
             if (e.webkitCompassHeading) {
                 heading = e.webkitCompassHeading;
             } else if (e.alpha !== null) {
-                // No Android, o alpha pode precisar de ajuste dependendo do navegador
-                heading = (e.absolute === true || e.type === 'deviceorientationabsolute') ? (360 - e.alpha) : (360 - e.alpha);
+                heading = (360 - e.alpha);
             }
 
-            // Filtro de Threshold: Só atualiza o alvo se a mudança for significativa (> 0.2 graus)
-            if (Math.abs(heading - targetH) > 0.2) {
+            // ZONA MORTA: Se a mudança for menor que 0.6 graus, ignoramos (filtra tremor da mão)
+            let diff = (heading - targetH + 180) % 360 - 180;
+            if (Math.abs(diff) > 0.6) {
                 targetH = heading;
             }
         }
 
         function smoothLoop() {
-            // Lógica de Interpolação Circular (impede o giro de 360 graus errado)
             let diff = (targetH - currentH + 180) % 360 - 180;
             if (diff < -180) diff += 360;
             
-            // Aumentei a suavidade (0.07). O ponteiro fica mais "pesado" e estável.
-            currentH += diff * 0.07;
+            // Suavização ultra-baixa (0.04). Dá um aspecto de agulha pesada.
+            currentH += diff * 0.04;
 
             svg.style.transform = `rotate(${-currentH}deg)`;
-            status.innerText = "Bússola estável: " + Math.round((currentH + 360) % 360) + "°";
+            status.innerText = "Bússola Estabilizada: " + Math.round((currentH + 360) % 360) + "°";
             
             requestAnimationFrame(smoothLoop);
         }
