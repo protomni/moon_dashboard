@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Astral do Pai - Teste de Sensores</title>
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --card-bg: #12161f;
+            --accent: #3a80d2;
+            --text: #f0f0f0;
+            --lua-color: #fdfd96;
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 { color: var(--accent); font-size: 1.2rem; margin-bottom: 20px; text-align: center; }
+
+        #compass-container {
+            width: 100%;
+            max-width: 300px;
+            height: 300px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        #compass-svg {
+            width: 100%;
+            height: 100%;
+            /* Suaviza a rotação para uma experiência melhor */
+            transition: transform 0.1s linear;
+        }
+
+        .direction-text { fill: white; font-size: 14px; font-weight: bold; text-anchor: middle; }
+        .compass-ring { fill: none; stroke: rgba(255,255,255,0.2); stroke-width: 1; }
+        
+        #permission-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
+        }
+
+        #btn-iniciar {
+            background: var(--accent); color: white; border: none;
+            padding: 15px 30px; border-radius: 10px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer;
+        }
+
+        .debug-panel {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: #888;
+            text-align: left;
+            width: 100%;
+            max-width: 350px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .debug-line { margin-bottom: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="permission-overlay">
+        <h1>🌙 Monitor Astral</h1>
+        <p>Para o dashboard girar e apontar para a Lua, precisamos calibrar os sensores de movimento do seu celular.</p>
+        <p><strong>Atenção:</strong> Funciona apenas em conexões seguras (HTTPS).</p>
+        <button id="btn-iniciar">ATIVAR SENSORES AGORA</button>
+    </div>
+
+    <h2>Direção da Lua - Teste</h2>
+
+    <div id="compass-container">
+        <svg id="compass-svg" viewBox="0 0 200 200">
+            <circle class="compass-ring" cx="100" cy="100" r="80" />
+            <line x1="100" y1="20" x2="100" y2="180" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+            <line x1="20" y1="100" x2="180" y2="100" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+            
+            <text class="direction-text" x="100" y="35">N</text>
+            <text class="direction-text" x="165" y="105">L</text>
+            <text class="direction-text" x="100" y="175">S</text>
+            <text class="direction-text" x="35" y="105">O</text>
+
+            <circle id="moon-marker" fill="var(--lua-color)" cx="100" cy="100" r="8" transform="rotate(110, 100, 100) translate(0, -80)" />
+            
+            <circle fill="white" cx="100" cy="100" r="3" />
+        </svg>
+    </div>
+
+    <div class="debug-panel">
+        <div class="debug-line"><strong>Status do Sensor:</strong> <span id="debug-status">Aguardando ativação...</span></div>
+        <div class="debug-line"><strong>Ângulo do Celular (Heading):</strong> <span id="debug-heading">--</span>°</div>
+        <div class="debug-line"><strong>Tipo de Evento:</strong> <span id="debug-type">--</span></div>
+    </div>
+
+    <script>
+        const btn = document.getElementById('btn-iniciar');
+        const overlay = document.getElementById('permission-overlay');
+        const compassSvg = document.getElementById('compass-svg');
+        const debugStatus = document.getElementById('debug-status');
+        const debugHeading = document.getElementById('debug-heading');
+        const debugType = document.getElementById('debug-type');
+
+        btn.addEventListener('click', async function() {
+            fecharOverlay();
+            debugStatus.innerText = "Iniciando processo de ativação...";
+
+            // Verificação de segurança obrigatória: HTTPS
+            if (window.location.protocol !== 'https:') {
+                debugStatus.innerText = "ERRO: O acesso à bússola exige HTTPS (conexão segura). Teste via CodePen.";
+                return;
+            }
+
+            // --- Lógica para iOS (iPhone/Safari) ---
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                debugStatus.innerText = "iOS detectado. Pedindo permissão explícita...";
+                try {
+                    const permissionState = await DeviceOrientationEvent.requestPermission();
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                        debugStatus.innerText = "Permissão concedida no iOS. Aguardando dados...";
+                    } else {
+                        debugStatus.innerText = "Permissão negada pelo usuário no iOS.";
+                    }
+                } catch (error) {
+                    debugStatus.innerText = "Erro ao pedir permissão no iOS: " + error.message;
+                    console.error(error);
+                }
+            } 
+            // --- Lógica para Android ou outros navegadores ---
+            else if ('ondeviceorientationabsolute' in window) {
+                // Tenta o evento absoluto (mais preciso)
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+                debugStatus.innerText = "Android detectado. Ativando 'deviceorientationabsolute'.";
+            } else if ('ondeviceorientation' in window) {
+                // Cai no evento padrão
+                window.addEventListener('deviceorientation', handleOrientation, true);
+                debugStatus.innerText = "Navegador padrão detectado. Ativando 'deviceorientation'.";
+            } else {
+                debugStatus.innerText = "Seu navegador/dispositivo parece não suportar sensores de orientação.";
+            }
+        });
+
+        function fecharOverlay() {
+            overlay.style.display = 'none';
+        }
+
+        // Função que trata os dados da bússola
+        function handleOrientation(event) {
+            let heading = 0;
+            let type = "unknown";
+
+            // Prioridade para o iOS compass heading
+            if (event.webkitCompassHeading) {
+                heading = event.webkitCompassHeading;
+                type = "webkitCompassHeading (iOS)";
+            } 
+            // Para o Android absoluto
+            else if (event.absolute === true && event.alpha !== null) {
+                heading = 360 - event.alpha; // Correção comum para o Android
+                type = "deviceorientationabsolute (Android)";
+            }
+            // Fallback para o deviceorientation padrão
+            else if (event.alpha !== null) {
+                heading = 360 - event.alpha;
+                type = "deviceorientation (Fallback)";
+            } else {
+                return; // Dados inválidos, ignora
+            }
+
+            // Arredonda para exibição
+            heading = Math.round(heading);
+
+            // Atualiza o painel de debug
+            debugHeading.innerText = heading;
+            debugType.innerText = type;
+            debugStatus.innerText = "Dados recebidos e funcionando!";
+
+            // Gira o SVG da bússola
+            compassSvg.style.transform = `rotate(${-heading}deg)`;
+        }
+    </script>
+</body>
+</html>
