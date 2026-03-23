@@ -20,102 +20,54 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
             background: var(--bg); 
             color: var(--text-main); 
-            margin: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center;
-            min-height: 100dvh; /* Altura dinâmica para mobile */
-            overflow: hidden;
+            margin: 0; padding: 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            min-height: 100dvh; overflow: hidden;
         }
 
-        /* Tela de Início (Overlay) */
         #overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: var(--bg); z-index: 1000; 
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center; 
-            padding: 20px; text-align: center; 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            padding: 30px; text-align: center; 
         }
 
-        #overlay h1 { font-size: 1.8rem; margin: 10px 0; color: var(--accent); }
-        #overlay p { 
-            color: var(--text-dim); 
-            max-width: 280px; 
-            line-height: 1.4; 
-            margin-bottom: 30px; 
-            font-size: 1rem;
-        }
-
-        /* Painel Principal */
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            padding: 20px;
-        }
-
-        h1.main-title { font-size: 1.4rem; margin: 0; color: var(--accent); }
-        .location { color: var(--text-dim); margin-bottom: 10px; font-size: 0.85rem; }
+        .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
+        h1 { font-size: 1.5rem; margin: 0; color: var(--accent); }
+        .location { color: var(--text-dim); margin-bottom: 5px; font-size: 0.85rem; }
 
         #compass-svg { 
-            width: 70vh; /* Baseado na altura para não sumir em telas pequenas */
-            max-width: 85vw; 
-            max-height: 300px;
-            transition: transform 0.15s ease-out; 
+            width: 80vw; max-width: 280px; max-height: 300px;
             margin: 20px 0; 
+            /* Removemos a transição CSS para o JS controlar a suavidade */
         }
 
         .card { 
-            background: var(--card); 
-            padding: 15px; 
-            border-radius: 16px; 
-            width: 100%; 
-            max-width: 320px; 
-            text-align: center; 
+            background: var(--card); padding: 15px; border-radius: 16px; 
+            width: 100%; max-width: 320px; text-align: center; 
             border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
         }
 
         button { 
-            background: var(--accent); 
-            color: white; 
-            border: none; 
-            padding: 16px 32px; 
-            border-radius: 12px; 
-            font-size: 1.1rem; 
-            font-weight: 600; 
-            cursor: pointer;
-            transition: transform 0.1s;
-            -webkit-tap-highlight-color: transparent;
+            background: var(--accent); color: white; border: none; 
+            padding: 16px 32px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; 
         }
-        
-        button:active { transform: scale(0.96); }
 
-        .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-dim); }
+        .label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); }
         .value { font-size: 1.4rem; font-weight: 700; margin-top: 5px; }
-        #status { font-size: 0.75rem; color: var(--accent); margin-top: 10px; font-weight: 500; }
-
-        /* Ajustes para modo Paisagem (Deitado) */
-        @media (orientation: landscape) and (max-height: 500px) {
-            .container { flex-direction: row; justify-content: center; gap: 20px; }
-            #compass-svg { max-height: 180px; margin: 0; }
-            .main-title, .location { display: none; } /* Oculta títulos para ganhar espaço */
-        }
+        #status { font-size: 0.75rem; color: var(--accent); margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="overlay">
         <div style="font-size: 3.5rem;">🌙</div>
         <h1>Moon Dashboard</h1>
-        <p>Toque abaixo para ativar os sensores e localizar a Lua no céu.</p>
+        <p style="color:var(--text-dim)">Toque para calibrar a bússola.</p>
         <button id="btn">INICIAR MONITOR</button>
     </div>
 
     <div class="container">
-        <h1 class="main-title">Moon Dashboard</h1>
+        <h1>Moon Dashboard</h1>
         <p class="location">Rio de Janeiro, RJ</p>
 
         <svg id="compass-svg" viewBox="0 0 200 200">
@@ -125,7 +77,7 @@
             <text x="100" y="180" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
             <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
             
-            <g id="moon-group" transform="rotate(110, 100, 100)">
+            <g transform="rotate(110, 100, 100)">
                 <circle fill="var(--lua)" cx="100" cy="20" r="10" />
                 <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
             </g>
@@ -137,7 +89,7 @@
         <div class="card">
             <div class="label">Direção da Lua Agora</div>
             <div class="value">Leste-Sudeste</div>
-            <div id="status">Sensores prontos</div>
+            <div id="status">Aguardando...</div>
         </div>
     </div>
 
@@ -146,28 +98,39 @@
         const svg = document.getElementById('compass-svg');
         const status = document.getElementById('status');
 
+        let currentHeading = 0;
+        let targetHeading = 0;
+        const lerpFactor = 0.1; // Ajuste entre 0.01 (muito lento) e 1.0 (instantâneo/tremido)
+
         btn.addEventListener('click', async () => {
             document.getElementById('overlay').style.display = 'none';
-            
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const p = await DeviceOrientationEvent.requestPermission();
-                    if (p === 'granted') {
-                        window.addEventListener('deviceorientation', handle, true);
-                    }
-                } catch (e) { console.error(e); }
+                const p = await DeviceOrientationEvent.requestPermission();
+                if (p === 'granted') window.addEventListener('deviceorientation', updateTarget, true);
             } else {
-                window.addEventListener('deviceorientationabsolute', handle, true);
-                window.addEventListener('deviceorientation', handle, true);
+                window.addEventListener('deviceorientationabsolute', updateTarget, true);
+                window.addEventListener('deviceorientation', updateTarget, true);
             }
+            animate();
         });
 
-        function handle(e) {
+        function updateTarget(e) {
             let h = e.webkitCompassHeading || (360 - e.alpha);
-            if (h) {
-                svg.style.transform = `rotate(${-h}deg)`;
-                status.innerText = "Bússola ativa: " + Math.round(h) + "°";
-            }
+            if (h) targetHeading = h;
+        }
+
+        // Função para suavizar a rotação e evitar o "pulo" de 360 para 0 graus
+        function lerpAngle(a, b, t) {
+            let diff = (b - a + 180) % 360 - 180;
+            if (diff < -180) diff += 360;
+            return a + diff * t;
+        }
+
+        function animate() {
+            currentHeading = lerpAngle(currentHeading, targetHeading, lerpFactor);
+            svg.style.transform = `rotate(${-currentHeading}deg)`;
+            status.innerText = "Bússola: " + Math.round(currentHeading) + "°";
+            requestAnimationFrame(animate);
         }
     </script>
 </body>
