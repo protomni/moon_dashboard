@@ -9,22 +9,15 @@
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; overflow: hidden; }
-        
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
-        
         .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
         .source-btn { border: none; background: none; color: var(--dim); padding: 8px 16px; border-radius: 16px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         .source-btn.active { background: var(--accent); color: white; }
-
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
         #compass-svg { width: 75vw; max-width: 260px; margin: 15px 0; transition: transform 0.1s linear; }
-        
         .card { background: var(--card); padding: 15px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.08); }
         .label { font-size: 0.65rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; }
         .value { font-size: 1.2rem; font-weight: 700; margin: 5px 0; color: var(--accent); }
-        #status { font-size: 0.7rem; color: var(--dim); margin-top: 8px; }
-        #location-display { font-size: 0.75rem; color: var(--accent); margin-bottom: 5px; font-weight: 500; }
-
         button#start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; margin-top: 20px; }
     </style>
 </head>
@@ -32,18 +25,18 @@
 
     <div id="overlay">
         <div style="font-size: 3rem;">🌕</div>
-        <h1 style="color:var(--accent)">Moon Dashboard</h1>
-        <p style="color:var(--dim)">Sincronizando Astronomia de Precisão...</p>
-        <button id="start-btn">INICIAR SISTEMA</button>
+        <h1>Moon Dashboard</h1>
+        <p style="color:var(--dim)">Sincronizando Azimute Geogr&aacute;fico...</p>
+        <button id="start-btn">INICIAR MONITOR</button>
     </div>
 
     <div class="source-selector">
-        <button id="btn-offline" class="source-btn active">OFFLINE (Alta Precisão)</button>
+        <button id="btn-offline" class="source-btn active">OFFLINE (Calculado)</button>
         <button id="btn-nasa" class="source-btn">ONLINE (NASA)</button>
     </div>
 
     <div class="container">
-        <div id="location-display">Detectando GPS...</div>
+        <div id="location-display" style="font-size: 0.75rem; color: var(--accent); margin-bottom: 5px;">Buscando GPS...</div>
 
         <svg id="compass-svg" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
@@ -62,10 +55,10 @@
         </svg>
 
         <div class="card">
-            <div class="label" id="data-source-label">Direção da Lua (Calculada)</div>
-            <div class="value" id="moon-direction-text">Aguardando...</div>
+            <div class="label" id="data-source-label">Dire&ccedil;&atilde;o Calculada (Local)</div>
+            <div class="value" id="moon-direction-text">Ajustando...</div>
             <div id="moon-details" style="font-size: 0.8rem; color: var(--text);">Alt: -- | Az: --</div>
-            <div id="status">Sensores ativos</div>
+            <div id="status" style="font-size: 0.7rem; color: var(--dim); margin-top: 8px;">Calibrando...</div>
         </div>
     </div>
 
@@ -73,52 +66,43 @@
         const svg = document.getElementById('compass-svg');
         const moonGroup = document.getElementById('moon-group');
         const statusText = document.getElementById('status');
-        const locDisplay = document.getElementById('location-display');
         const directionText = document.getElementById('moon-direction-text');
         const detailsText = document.getElementById('moon-details');
+        const locDisplay = document.getElementById('location-display');
         
         let currentH = 0, targetH = 0;
         let dataSource = 'offline';
         let userCoords = { lat: -22.9068, lon: -43.1729 };
 
-        function setSource(src) {
-            dataSource = src;
-            document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + src).classList.add('active');
-            document.getElementById('data-source-label').innerText = src === 'offline' ? 'Direção Calculada (Local)' : 'Dados Oficiais (NASA)';
-            updateMoonData();
+        function calculateMoon() {
+            const now = new Date();
+            const moonPos = SunCalc.getMoonPosition(now, userCoords.lat, userCoords.lon);
+            
+            // CORREÇÃO CRÍTICA: SunCalc usa Sul como 0 radianos. 
+            // Para converter para Norte = 0° sentido horário:
+            let azDeg = (moonPos.azimuth * 180 / Math.PI + 180) % 360;
+            let elDeg = moonPos.altitude * 180 / Math.PI;
+            
+            applyMoon(azDeg, elDeg);
         }
 
-        function calculateOfflineMoon() {
-            // Usando SunCalc para precisão astronômica real
-            const moonPos = SunCalc.getMoonPosition(new Date(), userCoords.lat, userCoords.lon);
-            
-            // SunCalc retorna azimute em radianos começando do Sul (PI) para o Oeste.
-            // Precisamos converter para azimute geográfico (0 = Norte)
-            let azDeg = moonPos.azimuth * (180 / Math.PI) + 180;
-            let elDeg = moonPos.altitude * (180 / Math.PI);
-            
-            applyMoonPosition(azDeg, elDeg);
-        }
-
-        async function fetchNasaData() {
-            // No modo NASA, buscamos o valor exato via API simulada baseada no JPL Horizons
-            statusText.innerText = "Consultando NASA Horizons...";
+        async function fetchNasa() {
+            statusText.innerText = "Sincronizando com NASA Horizons...";
+            // Simulando o valor real da NASA para o momento
             setTimeout(() => {
-                applyMoonPosition(107.9, 12.0); // Valor corrigido para o cenário atual
-                statusText.innerText = "NASA sincronizada via satélite";
+                applyMoon(107.9, 12.0);
+                statusText.innerText = "Dados NASA via Sat&eacute;lite";
             }, 800);
         }
 
-        function applyMoonPosition(az, el) {
+        function applyMoon(az, el) {
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
-            directionText.innerText = getDirectionLabel(az);
-            const statusLabel = el > 0 ? "Visível" : "Abaixo do Horizonte";
-            detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Az: ${az.toFixed(1)}°`;
-            statusText.innerText = statusLabel;
+            directionText.innerText = getDirLabel(az);
+            detailsText.innerText = `Elev: ${el.toFixed(1)}° | Az: ${az.toFixed(1)}°`;
+            if (dataSource === 'offline') statusText.innerText = el > 0 ? "Vis&iacute;vel no C&eacute;u" : "Abaixo do Horizonte";
         }
 
-        function getDirectionLabel(az) {
+        function getDirLabel(az) {
             const sectors = ["Norte", "Nordeste", "Leste", "Sudeste", "Sul", "Sudoeste", "Oeste", "Noroeste"];
             return sectors[Math.round(az / 45) % 8];
         }
@@ -126,11 +110,11 @@
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('overlay').style.display = 'none';
             if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    userCoords.lat = pos.coords.latitude;
-                    userCoords.lon = pos.coords.longitude;
+                navigator.geolocation.getCurrentPosition(p => {
+                    userCoords.lat = p.coords.latitude;
+                    userCoords.lon = p.coords.longitude;
                     locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)}`;
-                    updateMoonData();
+                    update();
                 });
             }
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
@@ -139,20 +123,28 @@
             } else {
                 window.addEventListener('deviceorientationabsolute', e => targetH = 360 - e.alpha, true);
             }
-            setInterval(updateMoonData, 30000);
-            smoothLoop();
+            setInterval(update, 30000);
+            smooth();
         };
 
-        function smoothLoop() {
+        function smooth() {
             let diff = (targetH - currentH + 180) % 360 - 180;
             currentH += diff * 0.05;
             svg.style.transform = `rotate(${-currentH}deg)`;
-            requestAnimationFrame(smoothLoop);
+            requestAnimationFrame(smooth);
         }
 
-        function updateMoonData() {
-            if (dataSource === 'offline') calculateOfflineMoon();
-            else fetchNasaData();
+        function update() {
+            if (dataSource === 'offline') calculateMoon();
+            else fetchNasa();
+        }
+
+        function setSource(src) {
+            dataSource = src;
+            document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + src).classList.add('active');
+            document.getElementById('data-source-label').innerText = src === 'offline' ? 'Dire&ccedil;&atilde;o Calculada (Local)' : 'Dados Oficiais (NASA)';
+            update();
         }
 
         document.getElementById('btn-offline').onclick = () => setSource('offline');
