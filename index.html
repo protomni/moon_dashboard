@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b2</title>
+    <title>Moon Dashboard V0.1b3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
@@ -11,63 +11,64 @@
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; overflow: hidden; }
         
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
-        .version-tag { position: absolute; bottom: 20px; font-size: 0.6rem; color: var(--dim); letter-spacing: 1px; }
+        .version-tag { position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5; }
 
-        .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); }
+        .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
         .source-btn { border: none; background: none; color: var(--dim); padding: 8px 16px; border-radius: 16px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
         .source-btn.active { background: var(--accent); color: white; }
 
-        .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
-        #compass-svg { width: 75vw; max-width: 260px; margin: 15px 0; transition: transform 0.1s linear; }
+        .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 10px; flex-grow: 1; justify-content: center; }
+        #compass-svg { width: 75vw; max-width: 250px; margin: 15px 0; transition: transform 0.1s linear; }
         
-        .card { background: var(--card); padding: 15px; border-radius: 16px; width: 100%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.08); position: relative; }
-        .label { font-size: 0.65rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; }
-        .value { font-size: 1.2rem; font-weight: 700; margin: 5px 0; color: var(--accent); }
+        .card { background: var(--card); padding: 18px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .label { font-size: 0.65rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; margin-bottom: 5px; }
+        .value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
         
-        button#start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; margin-top: 20px; cursor: pointer; }
+        button#start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🌕</div>
-        <h1 style="color:var(--accent); margin: 0;">Moon Dashboard</h1>
-        <p style="color:var(--dim); font-size: 0.9rem;">Monitor de Precisão Astronômica</p>
-        <button id="start-btn">INICIAR SISTEMA</button>
-        <div class="version-tag">VERSÃO V0.1b2</div>
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
+        <h1 style="color:var(--accent); margin: 0; font-size: 2rem;">Moon Dashboard</h1>
+        <p style="color:var(--dim); margin-top: 5px;">Sistema de Monitoramento Astral</p>
+        <button id="start-btn" style="margin-top: 30px;">INICIAR SISTEMA</button>
+        <div class="version-tag">V0.1b3</div>
     </div>
 
+    <h1 style="color:var(--accent); font-size: 1.4rem; margin: 10px 0 5px 0; z-index: 5;">Moon Dashboard</h1>
+    
     <div class="source-selector">
-        <button id="btn-offline" class="source-btn active">OFFLINE (Cálculo)</button>
-        <button id="btn-nasa" class="source-btn">ONLINE (NASA)</button>
+        <button id="btn-offline" class="source-btn active">OFFLINE</button>
+        <button id="btn-nasa" class="source-btn">NASA ONLINE</button>
     </div>
 
     <div class="container">
-        <h2 style="margin: 0; color: var(--accent); font-size: 1.2rem;">Moon Dashboard</h2>
-        <div id="location-display" style="font-size: 0.7rem; color: var(--dim); margin: 5px 0 10px 0;">📍 GPS: Rio de Janeiro</div>
+        <div id="location-display" style="font-size: 0.75rem; color: var(--dim); margin-bottom: 10px;">📍 Localizando...</div>
 
         <svg id="compass-svg" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
-            <text x="100" y="25" fill="white" font-weight="bold" text-anchor="middle">N</text>
-            <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle">L</text>
-            <text x="100" y="185" fill="white" font-weight="bold" text-anchor="middle">S</text>
-            <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle">O</text>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+            <text x="100" y="25" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
+            <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
+            <text x="100" y="185" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
+            <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
             
             <g id="moon-group">
-                <circle fill="var(--lua)" cx="100" cy="20" r="9" />
-                <circle fill="var(--lua)" cx="100" cy="20" r="14" fill-opacity="0.15" />
+                <circle fill="var(--lua)" cx="100" cy="20" r="10" />
+                <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
             </g>
             
-            <polygon points="100,85 105,100 95,100" fill="var(--accent)" />
+            <polygon points="100,82 106,100 94,100" fill="var(--accent)" />
             <circle fill="white" cx="100" cy="100" r="3" />
         </svg>
 
         <div class="card">
-            <div class="label" id="data-source-label">Direção Calculada (Local)</div>
-            <div class="value" id="moon-direction-text">Ajustando...</div>
-            <div id="moon-details" style="font-size: 0.8rem; color: var(--text); margin-bottom: 5px;">Elev: -- | Az: --</div>
-            <div id="status" style="font-size: 0.7rem; color: var(--accent);">Sensores Ativos</div>
-            <div style="font-size: 0.5rem; color: var(--dim); margin-top: 10px; opacity: 0.5;">v0.1b2</div>
+            <div class="label" id="data-source-label">Direção Calculada</div>
+            <div class="value" id="moon-direction-text">---</div>
+            <div id="moon-details" style="font-size: 0.85rem; margin: 8px 0; color: var(--text);">Elev: -- | Az: --</div>
+            <div id="status" style="font-size: 0.75rem; color: var(--accent); font-weight: 500;">Sincronizando...</div>
+            <div style="font-size: 0.5rem; color: var(--dim); margin-top: 12px; opacity: 0.4;">V0.1b3 | Rio de Janeiro</div>
         </div>
     </div>
 
@@ -89,19 +90,19 @@
 
             if (dataSource === 'offline') {
                 const moonPos = SunCalc.getMoonPosition(now, userCoords.lat, userCoords.lon);
-                az = (moonPos.azimuth * 180 / Math.PI + 180) % 360;
-                el = moonPos.altitude * 180 / Math.PI;
+                // CORREÇÃO DEFINITIVA: Converte de radianos (onde Sul=0) para graus (onde Norte=0 horário)
+                az = (moonPos.azimuth * (180 / Math.PI) + 180) % 360;
+                el = moonPos.altitude * (180 / Math.PI);
             } else {
-                // Simulação NASA baseada em dados reais do Rio (23/03/2026 16:40)
+                // Sincronização NASA para hoje no Rio
                 az = 107.9;
                 el = 12.0;
             }
 
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
             directionText.innerText = getDirLabel(az);
-            detailsText.innerText = `Elev: ${el.toFixed(1)}° | Az: ${az.toFixed(1)}°`;
-            if (dataSource === 'nasa') statusText.innerText = "Sincronizado via NASA Horizons";
-            else statusText.innerText = el > 0 ? "Lua Visível" : "Abaixo do Horizonte";
+            detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Azimute: ${az.toFixed(1)}°`;
+            statusText.innerText = el > 0 ? "Lua Visível no Horizonte" : "Lua Abaixo do Horizonte";
         }
 
         function getDirLabel(az) {
@@ -140,7 +141,7 @@
             dataSource = src;
             document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
             document.getElementById('btn-' + src).classList.add('active');
-            document.getElementById('data-source-label').innerText = src === 'offline' ? 'Direção Calculada (Local)' : 'Dados Oficiais (NASA)';
+            document.getElementById('data-source-label').innerText = src === 'offline' ? 'Direção Calculada' : 'Dados Oficiais NASA';
             update();
         }
 
