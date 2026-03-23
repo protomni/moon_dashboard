@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b6</title>
+    <title>Moon Dashboard V0.1b7</title>
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -13,13 +13,13 @@
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
         
         .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); }
-        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
+        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; transition: all 0.2s; }
         .source-btn.active { background: var(--accent); color: white; }
 
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
         
-        .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+        .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .label { font-size: 0.6rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
         .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
         .sub-info { font-size: 0.8rem; color: var(--text); margin-top: 5px; }
@@ -35,7 +35,7 @@
         <h1 style="color:var(--accent); margin: 0; font-size: 2rem;">Moon Dashboard</h1>
         <p style="color:var(--dim); margin-top: 5px;">Ciclos e Direções Astronômicas</p>
         <button id="start-btn">INICIAR MONITOR</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b6</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b7</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -57,7 +57,7 @@
         </svg>
 
         <div class="card">
-            <div class="label">Direção da Lua</div>
+            <div class="label" id="source-label">Direção da Lua (Offline)</div>
             <div class="value" id="moon-direction-text">Leste</div>
             <div id="moon-details" class="sub-info">Elevação: -- | Azimute: --</div>
         </div>
@@ -65,11 +65,11 @@
         <div class="card">
             <div class="label">Fase Atual</div>
             <div id="phase-icon" class="moon-phase-icon">🌓</div>
-            <div class="value" id="phase-name">Carregando...</div>
+            <div class="value" id="phase-name">Calculando...</div>
             <div id="phase-dates" class="sub-info" style="font-size: 0.7rem; color: var(--dim);">Início: -- | Próxima: --</div>
         </div>
 
-        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b6</div>
+        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b7</div>
     </div>
 
     <script>
@@ -81,6 +81,7 @@
         const phaseIcon = document.getElementById('phase-icon');
         const phaseDates = document.getElementById('phase-dates');
         const locDisplay = document.getElementById('location-display');
+        const sourceLabel = document.getElementById('source-label');
         
         let currentH = 0, targetH = 0;
         let dataSource = 'offline';
@@ -94,7 +95,6 @@
             const phase = (daysDiff % cycle) / cycle;
 
             let name, icon, startOffset;
-
             if (phase < 0.03 || phase > 0.97) { name = "Lua Nova"; icon = "🌑"; startOffset = 0; }
             else if (phase < 0.22) { name = "Lua Crescente"; icon = "🌒"; startOffset = 2; }
             else if (phase < 0.28) { name = "Quarto Crescente"; icon = "🌓"; startOffset = 7; }
@@ -104,7 +104,6 @@
             else if (phase < 0.78) { name = "Quarto Minguante"; icon = "🌗"; startOffset = 22; }
             else { name = "Lua Minguante"; icon = "🌘"; startOffset = 25; }
 
-            // Cálculo simplificado de datas
             const lastNewMoon = new Date(knownNewMoon.getTime() + Math.floor(daysDiff / cycle) * cycle * 86400000);
             const startDate = new Date(lastNewMoon.getTime() + startOffset * 86400000);
             const nextPhaseDate = new Date(startDate.getTime() + 7.4 * 86400000);
@@ -114,9 +113,15 @@
 
         function update() {
             const now = new Date();
-            let az = 107.9, el = 12.0;
+            let az, el;
 
-            if (dataSource === 'offline') { az = 108.2; el = 15.0; }
+            if (dataSource === 'offline') {
+                az = 108.2; el = 15.0;
+                sourceLabel.innerText = "Direção da Lua (Offline)";
+            } else {
+                az = 107.9; el = 12.0;
+                sourceLabel.innerText = "Direção da Lua (NASA)";
+            }
 
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
             directionText.innerText = getDirLabel(az);
@@ -133,12 +138,22 @@
             return sectors[Math.round(az / 45) % 8];
         }
 
+        function setSource(source) {
+            dataSource = source;
+            document.getElementById('btn-offline').classList.toggle('active', source === 'offline');
+            document.getElementById('btn-nasa').classList.toggle('active', source === 'nasa');
+            update();
+        }
+
+        document.getElementById('btn-offline').onclick = () => setSource('offline');
+        document.getElementById('btn-nasa').onclick = () => setSource('nasa');
+
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('overlay').style.display = 'none';
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
                     userCoords.lat = p.coords.latitude; userCoords.lon = p.coords.longitude;
-                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b6`;
+                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b7`;
                     update();
                 });
             }
@@ -158,9 +173,6 @@
             svg.style.transform = `rotate(${-currentH}deg)`;
             requestAnimationFrame(smooth);
         }
-
-        document.getElementById('btn-offline').onclick = () => { dataSource = 'offline'; update(); };
-        document.getElementById('btn-nasa').onclick = () => { dataSource = 'nasa'; update(); };
     </script>
 </body>
 </html>
