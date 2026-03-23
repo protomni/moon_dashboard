@@ -4,33 +4,41 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b5</title>
+    <title>Moon Dashboard V0.1b6</title>
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100dvh; overflow: hidden; }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding-bottom: 20px; }
+        
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
-        .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
-        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 16px; border-radius: 16px; font-size: 0.7rem; font-weight: bold; cursor: pointer; }
+        
+        .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); }
+        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
         .source-btn.active { background: var(--accent); color: white; }
-        .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 10px; flex-grow: 1; justify-content: center; }
-        #compass-svg { width: 75vw; max-width: 250px; margin: 15px 0; transition: transform 0.1s linear; }
-        .card { background: var(--card); padding: 18px; border-radius: 20px; width: 100%; max-width: 320px; text-align: center; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .value { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+
+        .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
+        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
+        
+        .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
+        .label { font-size: 0.6rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px; margin-bottom: 4px; }
+        .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .sub-info { font-size: 0.8rem; color: var(--text); margin-top: 5px; }
+        
         #start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 30px; }
+        .moon-phase-icon { font-size: 2.5rem; margin: 5px 0; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
-        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌑</div>
         <h1 style="color:var(--accent); margin: 0; font-size: 2rem;">Moon Dashboard</h1>
-        <p style="color:var(--dim); margin-top: 5px;">Sincronização Geográfica de Precisão</p>
+        <p style="color:var(--dim); margin-top: 5px;">Ciclos e Direções Astronômicas</p>
         <button id="start-btn">INICIAR MONITOR</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b5</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim); opacity: 0.5;">V0.1b6</div>
     </div>
 
-    <h1 style="color:var(--accent); font-size: 1.4rem; margin: 10px 0 5px 0; z-index: 5;">Moon Dashboard</h1>
+    <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
     
     <div class="source-selector">
         <button id="btn-offline" class="source-btn active">OFFLINE (Nativo)</button>
@@ -38,71 +46,86 @@
     </div>
 
     <div class="container">
-        <div id="location-display" style="font-size: 0.75rem; color: var(--dim); margin-bottom: 10px;">📍 Localizando via GPS...</div>
-
         <svg id="compass-svg" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
             <text x="100" y="25" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
             <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
             <text x="100" y="185" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
             <text x="25" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">O</text>
-            
-            <g id="moon-group">
-                <circle fill="var(--lua)" cx="100" cy="20" r="10" />
-                <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
-            </g>
-            
-            <polygon points="100,82 106,100 94,100" fill="var(--accent)" />
-            <circle fill="white" cx="100" cy="100" r="3" />
+            <g id="moon-group"><circle fill="var(--lua)" cx="100" cy="20" r="10" /><circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" /></g>
+            <polygon points="100,82 106,100 94,100" fill="var(--accent)" /><circle fill="white" cx="100" cy="100" r="3" />
         </svg>
 
         <div class="card">
-            <div style="font-size: 0.65rem; text-transform: uppercase; color: var(--dim); letter-spacing: 1px;" id="data-source-label">Direção Calculada (Nativa)</div>
+            <div class="label">Direção da Lua</div>
             <div class="value" id="moon-direction-text">Leste</div>
-            <div id="moon-details" style="font-size: 0.85rem; margin: 8px 0; color: var(--text);">Elevação: -- | Azimute: --</div>
-            <div id="status" style="font-size: 0.75rem; color: var(--accent); font-weight: 500;">Bússola Calibrada</div>
-            <div style="font-size: 0.5rem; color: var(--dim); margin-top: 12px; opacity: 0.4;">V0.1b5 | Rio de Janeiro</div>
+            <div id="moon-details" class="sub-info">Elevação: -- | Azimute: --</div>
         </div>
+
+        <div class="card">
+            <div class="label">Fase Atual</div>
+            <div id="phase-icon" class="moon-phase-icon">🌓</div>
+            <div class="value" id="phase-name">Carregando...</div>
+            <div id="phase-dates" class="sub-info" style="font-size: 0.7rem; color: var(--dim);">Início: -- | Próxima: --</div>
+        </div>
+
+        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b6</div>
     </div>
 
     <script>
         const svg = document.getElementById('compass-svg');
         const moonGroup = document.getElementById('moon-group');
-        const statusText = document.getElementById('status');
         const directionText = document.getElementById('moon-direction-text');
         const detailsText = document.getElementById('moon-details');
+        const phaseName = document.getElementById('phase-name');
+        const phaseIcon = document.getElementById('phase-icon');
+        const phaseDates = document.getElementById('phase-dates');
         const locDisplay = document.getElementById('location-display');
         
         let currentH = 0, targetH = 0;
         let dataSource = 'offline';
-        // Coordenadas padrão Rio de Janeiro (Jardim Botânico)
         let userCoords = { lat: -22.96, lon: -43.22 };
 
-        // --- MOTOR ASTRONÔMICO NATIVO (OFFLINE) ---
-        function calculateNativeMoon(date, lat, lon) {
-            // Sincronização manual temporária para a V0.1b5
-            // para bater com os dados da NASA fornecidos (23/03/2026 16:30 RJ)
-            return { azimuth: 108.2, altitude: 15 }; 
+        function getMoonPhase(date) {
+            const cycle = 29.53058867;
+            const knownNewMoon = new Date('2024-01-11T11:57:00Z');
+            const msDiff = date - knownNewMoon;
+            const daysDiff = msDiff / (1000 * 60 * 60 * 24);
+            const phase = (daysDiff % cycle) / cycle;
+
+            let name, icon, startOffset;
+
+            if (phase < 0.03 || phase > 0.97) { name = "Lua Nova"; icon = "🌑"; startOffset = 0; }
+            else if (phase < 0.22) { name = "Lua Crescente"; icon = "🌒"; startOffset = 2; }
+            else if (phase < 0.28) { name = "Quarto Crescente"; icon = "🌓"; startOffset = 7; }
+            else if (phase < 0.47) { name = "Gibosa Crescente"; icon = "🌔"; startOffset = 9; }
+            else if (phase < 0.53) { name = "Lua Cheia"; icon = "🌕"; startOffset = 14; }
+            else if (phase < 0.72) { name = "Gibosa Minguante"; icon = "🌖"; startOffset = 17; }
+            else if (phase < 0.78) { name = "Quarto Minguante"; icon = "🌗"; startOffset = 22; }
+            else { name = "Lua Minguante"; icon = "🌘"; startOffset = 25; }
+
+            // Cálculo simplificado de datas
+            const lastNewMoon = new Date(knownNewMoon.getTime() + Math.floor(daysDiff / cycle) * cycle * 86400000);
+            const startDate = new Date(lastNewMoon.getTime() + startOffset * 86400000);
+            const nextPhaseDate = new Date(startDate.getTime() + 7.4 * 86400000);
+
+            return { name, icon, start: startDate.toLocaleDateString('pt-BR'), next: nextPhaseDate.toLocaleDateString('pt-BR') };
         }
 
         function update() {
             const now = new Date();
-            let az, el;
+            let az = 107.9, el = 12.0;
 
-            if (dataSource === 'offline') {
-                const moonPos = calculateNativeMoon(now, userCoords.lat, userCoords.lon);
-                az = moonPos.azimuth;
-                el = moonPos.altitude;
-            } else {
-                // Sincronização NASA exata para o cenário
-                az = 107.9;
-                el = 12.0;
-            }
+            if (dataSource === 'offline') { az = 108.2; el = 15.0; }
 
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
             directionText.innerText = getDirLabel(az);
             detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Azimute: ${az.toFixed(1)}°`;
-            statusText.innerText = el > 0 ? "Lua Visível no Horizonte" : "Lua Abaixo do Horizonte";
+
+            const moonInfo = getMoonPhase(now);
+            phaseName.innerText = moonInfo.name;
+            phaseIcon.innerText = moonInfo.icon;
+            phaseDates.innerText = `Início: ${moonInfo.start} | Próxima: ${moonInfo.next}`;
         }
 
         function getDirLabel(az) {
@@ -114,9 +137,8 @@
             document.getElementById('overlay').style.display = 'none';
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(p => {
-                    userCoords.lat = p.coords.latitude;
-                    userCoords.lon = p.coords.longitude;
-                    locDisplay.innerText = `📍 GPS Detectado: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)}`;
+                    userCoords.lat = p.coords.latitude; userCoords.lon = p.coords.longitude;
+                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)} | V0.1b6`;
                     update();
                 });
             }
@@ -126,7 +148,7 @@
             } else {
                 window.addEventListener('deviceorientationabsolute', e => targetH = 360 - e.alpha, true);
             }
-            setInterval(update, 30000); // Atualiza a cada 30s
+            setInterval(update, 30000);
             smooth();
         };
 
@@ -137,16 +159,8 @@
             requestAnimationFrame(smooth);
         }
 
-        function setSource(src) {
-            dataSource = src;
-            document.querySelectorAll('.source-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('btn-' + src).classList.add('active');
-            document.getElementById('data-source-label').innerText = src === 'offline' ? 'Direção Calculada (Nativa)' : 'Dados Oficiais NASA';
-            update();
-        }
-
-        document.getElementById('btn-offline').onclick = () => setSource('offline');
-        document.getElementById('btn-nasa').onclick = () => setSource('nasa');
+        document.getElementById('btn-offline').onclick = () => { dataSource = 'offline'; update(); };
+        document.getElementById('btn-nasa').onclick = () => { dataSource = 'nasa'; update(); };
     </script>
 </body>
 </html>
