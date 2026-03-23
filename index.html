@@ -5,65 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Moon Dashboard</title>
     <style>
-        :root { 
-            --bg: #05070a; 
-            --card: #12161f; 
-            --accent: #4a90e2; 
-            --lua: #fdfd96; 
-            --text-main: #f0f0f0;
-            --text-dim: #8892b0;
-        }
-
-        * { box-sizing: border-box; }
-
+        :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text-main: #f0f0f0; --text-dim: #8892b0; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            background: var(--bg); 
-            color: var(--text-main); 
-            margin: 0; padding: 0; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100dvh; overflow: hidden;
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: var(--bg); color: var(--text-main); 
+            margin: 0; padding: 0; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; min-height: 100dvh; overflow: hidden; 
         }
-
         #overlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: var(--bg); z-index: 1000; 
+            position: fixed; inset: 0; background: var(--bg); z-index: 1000; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             padding: 30px; text-align: center; 
         }
-
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; padding: 20px; }
         h1 { font-size: 1.5rem; margin: 0; color: var(--accent); }
         .location { color: var(--text-dim); margin-bottom: 5px; font-size: 0.85rem; }
-
-        #compass-svg { 
-            width: 80vw; max-width: 280px; max-height: 300px;
-            margin: 20px 0; 
-            /* Removemos a transição CSS para o JS controlar a suavidade */
-        }
-
+        #compass-svg { width: 80vw; max-width: 280px; margin: 20px 0; will-change: transform; }
         .card { 
-            background: var(--card); padding: 15px; border-radius: 16px; 
+            background: var(--card); padding: 18px; border-radius: 16px; 
             width: 100%; max-width: 320px; text-align: center; 
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.08); 
         }
-
         button { 
             background: var(--accent); color: white; border: none; 
-            padding: 16px 32px; border-radius: 12px; font-size: 1.1rem; font-weight: 600; 
+            padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer;
         }
-
-        .label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); }
+        .label { font-size: 0.7rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 1px; }
         .value { font-size: 1.4rem; font-weight: 700; margin-top: 5px; }
-        #status { font-size: 0.75rem; color: var(--accent); margin-top: 10px; }
+        #status { font-size: 0.75rem; color: var(--accent); margin-top: 10px; opacity: 0.8; }
     </style>
 </head>
 <body>
     <div id="overlay">
-        <div style="font-size: 3.5rem;">🌙</div>
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌙</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--text-dim)">Toque para calibrar a bússola.</p>
-        <button id="btn">INICIAR MONITOR</button>
+        <p style="color:var(--text-dim); max-width: 250px;">Calibrando bússola de alta precisão...</p>
+        <button id="btn">ENTRAR NO PAINEL</button>
     </div>
 
     <div class="container">
@@ -71,7 +49,7 @@
         <p class="location">Rio de Janeiro, RJ</p>
 
         <svg id="compass-svg" viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
+            <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
             <text x="100" y="30" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">N</text>
             <text x="175" y="105" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">L</text>
             <text x="100" y="180" fill="white" font-weight="bold" text-anchor="middle" style="font-size: 14px;">S</text>
@@ -82,14 +60,14 @@
                 <circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" />
             </g>
             
-            <polygon points="100,85 105,100 95,100" fill="var(--accent)" />
-            <circle fill="white" cx="100" cy="100" r="3" />
+            <polygon points="100,82 106,100 94,100" fill="var(--accent)" />
+            <circle fill="white" cx="100" cy="100" r="3.5" />
         </svg>
 
         <div class="card">
-            <div class="label">Direção da Lua Agora</div>
+            <div class="label">Direção da Lua</div>
             <div class="value">Leste-Sudeste</div>
-            <div id="status">Aguardando...</div>
+            <div id="status">Sincronizando...</div>
         </div>
     </div>
 
@@ -98,39 +76,60 @@
         const svg = document.getElementById('compass-svg');
         const status = document.getElementById('status');
 
-        let currentHeading = 0;
-        let targetHeading = 0;
-        const lerpFactor = 0.1; // Ajuste entre 0.01 (muito lento) e 1.0 (instantâneo/tremido)
+        let currentH = 0;
+        let targetH = 0;
+        let sensorActive = false;
 
         btn.addEventListener('click', async () => {
             document.getElementById('overlay').style.display = 'none';
+            
+            // Lógica de seleção de sensor única para evitar conflitos
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                const p = await DeviceOrientationEvent.requestPermission();
-                if (p === 'granted') window.addEventListener('deviceorientation', updateTarget, true);
+                try {
+                    const response = await DeviceOrientationEvent.requestPermission();
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', onData, true);
+                        sensorActive = true;
+                    }
+                } catch (e) { status.innerText = "Erro no iOS"; }
+            } else if ('ondeviceorientationabsolute' in window) {
+                window.addEventListener('deviceorientationabsolute', onData, true);
+                sensorActive = true;
             } else {
-                window.addEventListener('deviceorientationabsolute', updateTarget, true);
-                window.addEventListener('deviceorientation', updateTarget, true);
+                window.addEventListener('deviceorientation', onData, true);
+                sensorActive = true;
             }
-            animate();
+            
+            if (sensorActive) requestAnimationFrame(smoothLoop);
         });
 
-        function updateTarget(e) {
-            let h = e.webkitCompassHeading || (360 - e.alpha);
-            if (h) targetHeading = h;
+        function onData(e) {
+            let heading = 0;
+            if (e.webkitCompassHeading) {
+                heading = e.webkitCompassHeading;
+            } else if (e.alpha !== null) {
+                // No Android, o alpha pode precisar de ajuste dependendo do navegador
+                heading = (e.absolute === true || e.type === 'deviceorientationabsolute') ? (360 - e.alpha) : (360 - e.alpha);
+            }
+
+            // Filtro de Threshold: Só atualiza o alvo se a mudança for significativa (> 0.2 graus)
+            if (Math.abs(heading - targetH) > 0.2) {
+                targetH = heading;
+            }
         }
 
-        // Função para suavizar a rotação e evitar o "pulo" de 360 para 0 graus
-        function lerpAngle(a, b, t) {
-            let diff = (b - a + 180) % 360 - 180;
+        function smoothLoop() {
+            // Lógica de Interpolação Circular (impede o giro de 360 graus errado)
+            let diff = (targetH - currentH + 180) % 360 - 180;
             if (diff < -180) diff += 360;
-            return a + diff * t;
-        }
+            
+            // Aumentei a suavidade (0.07). O ponteiro fica mais "pesado" e estável.
+            currentH += diff * 0.07;
 
-        function animate() {
-            currentHeading = lerpAngle(currentHeading, targetHeading, lerpFactor);
-            svg.style.transform = `rotate(${-currentHeading}deg)`;
-            status.innerText = "Bússola: " + Math.round(currentHeading) + "°";
-            requestAnimationFrame(animate);
+            svg.style.transform = `rotate(${-currentH}deg)`;
+            status.innerText = "Bússola estável: " + Math.round((currentH + 360) % 360) + "°";
+            
+            requestAnimationFrame(smoothLoop);
         }
     </script>
 </body>
