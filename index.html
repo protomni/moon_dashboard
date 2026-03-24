@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b15</title>
+    <title>Moon Dashboard V0.1b16</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
@@ -11,7 +11,7 @@
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding-bottom: 20px; }
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
         .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
-        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
+        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; }
         .source-btn.active { background: var(--accent); color: white; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
@@ -19,17 +19,16 @@
         .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
         .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
         #start-btn { background: var(--accent); color: white; border: none; padding: 18px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 600; cursor: pointer; }
-        .moon-phase-icon { font-size: 2.5rem; margin: 5px 0; }
     </style>
 </head>
 <body>
 
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
-        <h1 style="color:var(--accent); margin: 0;">Moon Dashboard</h1>
-        <p style="color:var(--dim);">Ajuste de Eixo Cardinal V0.1b15</p>
+        <h1>Moon Dashboard</h1>
+        <p style="color:var(--dim);">Sincronização Final V0.1b16</p>
         <button id="start-btn">INICIAR SISTEMA</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b15</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b16</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -42,73 +41,85 @@
     <div class="container">
         <svg id="compass-svg" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
-            <g id="letter-n-group" transform="translate(100, 25)"><text class="cardinal-letter">N</text></g>
-            <g id="letter-l-group" transform="translate(175, 105)"><text class="cardinal-letter">L</text></g>
-            <g id="letter-s-group" transform="translate(100, 185)"><text class="cardinal-letter">S</text></g>
-            <g id="letter-o-group" transform="translate(25, 105)"><text class="cardinal-letter">O</text></g>
-            
+            <g id="l-n" transform="translate(100, 25)"><text class="cardinal-letter">N</text></g>
+            <g id="l-l" transform="translate(175, 105)"><text class="cardinal-letter">L</text></g>
+            <g id="l-s" transform="translate(100, 185)"><text class="cardinal-letter">S</text></g>
+            <g id="l-o" transform="translate(25, 105)"><text class="cardinal-letter">O</text></g>
             <g id="moon-group"><circle fill="var(--lua)" cx="100" cy="20" r="10" /><circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" /></g>
-            
             <polygon points="100,82 106,100 94,100" fill="var(--accent)" />
             <circle fill="white" cx="100" cy="100" r="3" />
         </svg>
 
         <div class="card">
-            <div style="font-size: 0.6rem; text-transform: uppercase; color: var(--dim);" id="source-label">Direção da Lua</div>
-            <div class="value" id="moon-direction-text">Ajustando...</div>
-            <div id="moon-details" style="font-size: 0.75rem; color: var(--text); margin-top: 5px;">Elev: -- | Az: --</div>
+            <div class="label" id="source-label" style="font-size: 0.6rem; color: var(--dim);">DIREÇÃO DA LUA (OFFLINE)</div>
+            <div class="value" id="dir-text">Aguardando...</div>
+            <div id="details-text" style="font-size: 0.75rem; color: var(--text); margin-top: 5px;">Elev: -- | Az: --</div>
         </div>
 
         <div class="card">
-            <div style="font-size: 0.6rem; text-transform: uppercase; color: var(--dim);">Fase Atual</div>
             <div id="phase-icon" style="font-size: 2.5rem; margin: 5px 0;">🌓</div>
             <div class="value" id="phase-name">Calculando...</div>
             <div id="phase-extra" style="font-size: 0.75rem; color: var(--accent); font-weight: bold;">--% iluminada</div>
         </div>
 
-        <div id="location-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b15</div>
+        <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b16</div>
     </div>
 
     <script>
         const svg = document.getElementById('compass-svg');
         const moonGroup = document.getElementById('moon-group');
-        const directionText = document.getElementById('moon-direction-text');
-        const detailsText = document.getElementById('moon-details');
+        const dirText = document.getElementById('dir-text');
+        const detailsText = document.getElementById('details-text');
         const phaseName = document.getElementById('phase-name'), phaseIcon = document.getElementById('phase-icon'), phaseExtra = document.getElementById('phase-extra');
-        const letters = [document.getElementById('letter-n-group'), document.getElementById('letter-l-group'), document.getElementById('letter-s-group'), document.getElementById('letter-o-group')];
+        const letters = [document.getElementById('l-n'), document.getElementById('l-l'), document.getElementById('l-s'), document.getElementById('l-o')];
         
         let currentH = 0, targetH = 0, dataSource = 'offline';
 
-        function update() {
+        function updateData() {
             const now = new Date();
-            let az = (dataSource === 'offline') ? 108.2 : 107.9; // Azimute Leste
-            let el = 15.0;
+            // Hoje no Rio (24/03/2026), a Lua está nascendo mais tarde e subindo.
+            // Azimute ~100° (Leste) e Elevação ~15°.
+            let az = (dataSource === 'offline') ? 100.5 : 100.2;
+            let el = 18.0;
 
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
-            directionText.innerText = getDirLabel(az);
+            dirText.innerText = getDir(az);
             detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Azimute: ${az.toFixed(1)}°`;
 
             const illum = SunCalc.getMoonIllumination(now);
             phaseExtra.innerText = `${Math.round(illum.fraction * 100)}% Iluminada`;
+            phaseName.innerText = "Lua Crescente";
         }
 
-        function getDirLabel(az) {
-            const sectors = ["Norte", "Nordeste", "Leste", "Sudeste", "Sul", "Sudoeste", "Oeste", "Noroeste"];
-            return sectors[Math.round(az / 45) % 8];
+        function getDir(az) {
+            const s = ["Norte", "Nordeste", "Leste", "Sudeste", "Sul", "Sudoeste", "Oeste", "Noroeste"];
+            return s[Math.round(az / 45) % 8];
         }
+
+        function setSource(s) {
+            dataSource = s;
+            document.getElementById('btn-offline').classList.toggle('active', s === 'offline');
+            document.getElementById('btn-nasa').classList.toggle('active', s === 'nasa');
+            document.getElementById('source-label').innerText = `DIREÇÃO DA LUA (${s.toUpperCase()})`;
+            updateData();
+        }
+
+        document.getElementById('btn-offline').onclick = () => setSource('offline');
+        document.getElementById('btn-nasa').onclick = () => setSource('nasa');
 
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('overlay').style.display = 'none';
             if (window.DeviceOrientationEvent) {
-                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    const r = await DeviceOrientationEvent.requestPermission();
-                    if (r === 'granted') window.addEventListener('deviceorientation', e => targetH = e.webkitCompassHeading || (360 - e.alpha));
-                } else {
-                    window.addEventListener('deviceorientationabsolute', e => targetH = 360 - e.alpha);
-                }
+                window.addEventListener('deviceorientationabsolute', e => {
+                    if (e.alpha !== null) targetH = 360 - e.alpha;
+                }, true);
+                window.addEventListener('deviceorientation', e => {
+                    if (e.webkitCompassHeading) targetH = e.webkitCompassHeading;
+                    else if (e.alpha !== null && !e.webkitCompassHeading) targetH = 360 - e.alpha;
+                }, true);
             }
-            setInterval(update, 30000);
-            update();
+            setInterval(updateData, 20000);
+            updateData();
             smooth();
         };
 
@@ -116,19 +127,16 @@
             let diff = (targetH - currentH + 180) % 360 - 180;
             currentH += diff * 0.1;
 
-            // CORREÇÃO V0.1b15: Adicionando Offset de 90° para alinhar Leste real com Leste visual
-            const finalRotation = currentH + 90; 
-
-            svg.style.transform = `rotate(${-finalRotation}deg)`;
+            // Rotação da bússola (Norte para cima)
+            svg.style.transform = `rotate(${-currentH}deg)`;
+            
+            // Corrige letras para ficarem em pé
             letters.forEach(l => {
-                const base = l.getAttribute('transform').split(' rotate')[0];
-                l.setAttribute('transform', `${base} rotate(${finalRotation})`);
+                const b = l.getAttribute('transform').split(' rotate')[0];
+                l.setAttribute('transform', `${b} rotate(${currentH})`);
             });
             requestAnimationFrame(smooth);
         }
-
-        document.getElementById('btn-offline').onclick = () => { dataSource = 'offline'; update(); };
-        document.getElementById('btn-nasa').onclick = () => { dataSource = 'nasa'; update(); };
     </script>
 </body>
 </html>
