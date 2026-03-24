@@ -35,7 +35,7 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--dim);">Trava de Conflito de Sensor V0.1b23</p>
+        <p style="color:var(--dim);">Trava de Conflito de Sensor V0.1b24</p>
         <button id="start-btn">INICIAR SISTEMA</button>
         <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b23</div>
     </div>
@@ -94,7 +94,7 @@
         let userCoords = { lat: -22.96, lon: -43.22 };
         
         // CALIBRAÇÃO ATUALIZADA: Baseado no erro "Sul mostra Oeste"
-        let hardwareOffset = 270; 
+        let hardwareOffset = 0; 
 
         // BUFFER REDUZIDO (Como o conflito de sensores sumiu, precisamos de menos inércia)
         const angleHistory = [];
