@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b20</title>
+    <title>Moon Dashboard V0.1b21</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,10 +19,8 @@
         .source-btn.active { background: var(--accent); color: white; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         
-        /* NOVO MOTOR CSS: Animação suave processada pela GPU para eliminar jitter */
-        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        .cardinal-group { transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        .moon-orbit-group { transition: transform 0.5s ease-out; }
+        /* CSS Transitions REMOVIDAS para evitar conflito com o filtro JS */
+        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; will-change: transform; }
         
         .cardinal-letter { font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
         .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
@@ -38,9 +36,9 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--dim);">Motor Gráfico CSS & Filtro de Jitter V0.1b20</p>
+        <p style="color:var(--dim);">Amortecimento Matemático Absoluto V0.1b21</p>
         <button id="start-btn">INICIAR SISTEMA</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b20</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b21</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -54,12 +52,12 @@
         <svg id="compass-svg" viewBox="0 0 200 200">
             <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2" />
             
-            <g id="l-n" class="cardinal-group" style="transform: translate(100px, 25px);"><text class="cardinal-letter" x="0" y="0">N</text></g>
-            <g id="l-l" class="cardinal-group" style="transform: translate(175px, 105px);"><text class="cardinal-letter" x="0" y="0">L</text></g>
-            <g id="l-s" class="cardinal-group" style="transform: translate(100px, 185px);"><text class="cardinal-letter" x="0" y="0">S</text></g>
-            <g id="l-o" class="cardinal-group" style="transform: translate(25px, 105px);"><text class="cardinal-letter" x="0" y="0">O</text></g>
+            <g id="l-n" style="transform: translate(100px, 25px);"><text class="cardinal-letter" x="0" y="0">N</text></g>
+            <g id="l-l" style="transform: translate(175px, 105px);"><text class="cardinal-letter" x="0" y="0">L</text></g>
+            <g id="l-s" style="transform: translate(100px, 185px);"><text class="cardinal-letter" x="0" y="0">S</text></g>
+            <g id="l-o" style="transform: translate(25px, 105px);"><text class="cardinal-letter" x="0" y="0">O</text></g>
             
-            <g id="moon-group" class="moon-orbit-group"><circle fill="var(--lua)" cx="100" cy="20" r="10" /><circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" /></g>
+            <g id="moon-group"><circle fill="var(--lua)" cx="100" cy="20" r="10" /><circle fill="var(--lua)" cx="100" cy="20" r="15" fill-opacity="0.2" /></g>
             
             <polygon points="100,82 106,100 94,100" fill="var(--accent)" />
             <circle fill="white" cx="100" cy="100" r="3" />
@@ -80,8 +78,7 @@
         </div>
 
         <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro</div>
-        
-        <div class="version-tag">VERSÃO V0.1b20</div>
+        <div class="version-tag">VERSÃO V0.1b21</div>
     </div>
 
     <script>
@@ -93,13 +90,12 @@
         const letterN = document.getElementById('l-n'), letterL = document.getElementById('l-l');
         const letterS = document.getElementById('l-s'), letterO = document.getElementById('l-o');
         
-        let displayHeading = 0; // O ângulo cumulativo sendo mostrado
-        let lastSensorUpdate = 0; // Temporizador para reduzir a taxa de atualização
+        let currentH = 0, targetH = 0;
         let dataSource = 'offline';
         let userCoords = { lat: -22.96, lon: -43.22 };
         
-        // Compensação inicial baseada no seu relato (Sul=Norte significa inversão de 180 graus)
-        let hardwareOffset = 180; 
+        // CALIBRAÇÃO DEFINITIVA BASEADA NO SEU TESTE
+        let hardwareOffset = 90; 
 
         function updateAstronomicalData() {
             const now = new Date();
@@ -156,8 +152,7 @@
 
         document.getElementById('btn-rotate').onclick = () => {
             hardwareOffset = (hardwareOffset + 90) % 360;
-            // Força uma atualização simulada para mover a bússola imediatamente ao clicar
-            processSensorData(displayHeading - hardwareOffset + 90);
+            processSensorData(currentH - hardwareOffset + 90); 
         };
 
         document.getElementById('start-btn').onclick = async () => {
@@ -178,36 +173,42 @@
                     else if (e.alpha !== null && !e.webkitCompassHeading) processSensorData(360 - e.alpha);
                 }, true);
             }
-            setInterval(updateAstronomicalData, 30000); // Fases da lua atualizam a cada 30s
+            setInterval(updateAstronomicalData, 30000); 
             updateAstronomicalData();
+            smooth();
         };
 
-        // LÓGICA ANTI-JITTER EXTREMA
+        // MOTOR ANTI-JITTER 100% JAVASCRIPT
         function processSensorData(rawHeading) {
-            const now = Date.now();
-            // THRESHOLD DE TEMPO: Só processa 5 vezes por segundo. O resto é ignorado.
-            if (now - lastSensorUpdate < 200) return; 
-            lastSensorUpdate = now;
-
             let adjustedHeading = (rawHeading + hardwareOffset) % 360;
             
-            // Calcula a menor distância de rotação (impede giros bruscos de 360 graus)
-            let diff = (adjustedHeading - (displayHeading % 360) + 180) % 360 - 180;
+            // Calcula a diferença lidando com a virada do 360 para 0
+            let diff = (adjustedHeading - targetH + 540) % 360 - 180;
             
-            // THRESHOLD DE MOVIMENTO: Ignora micro-tremores (jitter) menores que 1 grau
-            if (Math.abs(diff) < 1.0) return;
+            // ZONA MORTA EXPANDIDA: Ignora vibrações menores que 1.5 grau da mão
+            if (Math.abs(diff) > 1.5) {
+                targetH += diff;
+            }
+        }
 
-            // Ângulo cumulativo (pode passar de 360, 720, etc. O CSS lida com isso)
-            displayHeading += diff;
-
-            // Aplica via CSS: O navegador fará a transição gráfica suave e pesada
-            svg.style.transform = `rotate(${-displayHeading}deg)`;
+        function smooth() {
+            let diffAnim = (targetH - currentH + 540) % 360 - 180;
             
-            // As letras recebem a rotação inversa para ficarem em pé
-            letterN.style.transform = `translate(100px, 25px) rotate(${displayHeading}deg)`;
-            letterL.style.transform = `translate(175px, 105px) rotate(${displayHeading}deg)`;
-            letterS.style.transform = `translate(100px, 185px) rotate(${displayHeading}deg)`;
-            letterO.style.transform = `translate(25px, 105px) rotate(${displayHeading}deg)`;
+            // AMORTECEDOR EXTREMO (0.04): O ponteiro vai "deslizar" lentamente e ignorar trancos
+            currentH += diffAnim * 0.04; 
+
+            // Normaliza para visualização contínua
+            let displayH = ((currentH % 360) + 360) % 360;
+
+            svg.style.transform = `rotate(${-displayH}deg)`;
+            
+            // Mantém as letras em pé
+            letterN.style.transform = `translate(100px, 25px) rotate(${displayH}deg)`;
+            letterL.style.transform = `translate(175px, 105px) rotate(${displayH}deg)`;
+            letterS.style.transform = `translate(100px, 185px) rotate(${displayH}deg)`;
+            letterO.style.transform = `translate(25px, 105px) rotate(${displayH}deg)`;
+            
+            requestAnimationFrame(smooth);
         }
     </script>
 </body>
