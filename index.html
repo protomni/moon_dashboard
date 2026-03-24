@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b21</title>
+    <title>Moon Dashboard V0.1b22</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -19,7 +19,6 @@
         .source-btn.active { background: var(--accent); color: white; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         
-        /* CSS Transitions REMOVIDAS para evitar conflito com o filtro JS */
         #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; will-change: transform; }
         
         .cardinal-letter { font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
@@ -36,9 +35,9 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--dim);">Amortecimento Matemático Absoluto V0.1b21</p>
+        <p style="color:var(--dim);">Filtro Vetorial Circular V0.1b22</p>
         <button id="start-btn">INICIAR SISTEMA</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b21</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b22</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -78,7 +77,7 @@
         </div>
 
         <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro</div>
-        <div class="version-tag">VERSÃO V0.1b21</div>
+        <div class="version-tag">VERSÃO V0.1b22</div>
     </div>
 
     <script>
@@ -94,8 +93,12 @@
         let dataSource = 'offline';
         let userCoords = { lat: -22.96, lon: -43.22 };
         
-        // CALIBRAÇÃO DEFINITIVA BASEADA NO SEU TESTE
-        let hardwareOffset = 90; 
+        // CALIBRAÇÃO ATUALIZADA (180° = Base 90° anterior + 1 toque de 90°)
+        let hardwareOffset = 180; 
+
+        // BUFFER DO FILTRO VETORIAL PARA JITTER
+        const angleHistory = [];
+        const HISTORY_SIZE = 25; // Define a "inércia" da bússola. Maior = mais estável.
 
         function updateAstronomicalData() {
             const now = new Date();
@@ -152,7 +155,6 @@
 
         document.getElementById('btn-rotate').onclick = () => {
             hardwareOffset = (hardwareOffset + 90) % 360;
-            processSensorData(currentH - hardwareOffset + 90); 
         };
 
         document.getElementById('start-btn').onclick = async () => {
@@ -178,31 +180,40 @@
             smooth();
         };
 
-        // MOTOR ANTI-JITTER 100% JAVASCRIPT
+        // NOVO MOTOR: MÉDIA VETORIAL CIRCULAR (Elimina o Jitter sem engasgos)
         function processSensorData(rawHeading) {
             let adjustedHeading = (rawHeading + hardwareOffset) % 360;
+            let rad = adjustedHeading * (Math.PI / 180); // Converte para radianos
             
-            // Calcula a diferença lidando com a virada do 360 para 0
-            let diff = (adjustedHeading - targetH + 540) % 360 - 180;
-            
-            // ZONA MORTA EXPANDIDA: Ignora vibrações menores que 1.5 grau da mão
-            if (Math.abs(diff) > 1.5) {
-                targetH += diff;
+            // Adiciona ao histórico e remove o mais antigo se passar do limite
+            angleHistory.push(rad);
+            if(angleHistory.length > HISTORY_SIZE) {
+                angleHistory.shift();
             }
+
+            // Calcula o Seno e Cosseno médios
+            let sumSin = 0, sumCos = 0;
+            for(let i = 0; i < angleHistory.length; i++) {
+                sumSin += Math.sin(angleHistory[i]);
+                sumCos += Math.cos(angleHistory[i]);
+            }
+            
+            let avgSin = sumSin / angleHistory.length;
+            let avgCos = sumCos / angleHistory.length;
+            
+            // Converte de volta para ângulo (isso evita o bug da média entre 359 e 0)
+            let avgRad = Math.atan2(avgSin, avgCos);
+            targetH = (avgRad * (180 / Math.PI) + 360) % 360;
         }
 
         function smooth() {
+            // Suavização visual sobre o alvo já filtrado
             let diffAnim = (targetH - currentH + 540) % 360 - 180;
-            
-            // AMORTECEDOR EXTREMO (0.04): O ponteiro vai "deslizar" lentamente e ignorar trancos
-            currentH += diffAnim * 0.04; 
+            currentH += diffAnim * 0.05; 
 
-            // Normaliza para visualização contínua
             let displayH = ((currentH % 360) + 360) % 360;
-
             svg.style.transform = `rotate(${-displayH}deg)`;
             
-            // Mantém as letras em pé
             letterN.style.transform = `translate(100px, 25px) rotate(${displayH}deg)`;
             letterL.style.transform = `translate(175px, 105px) rotate(${displayH}deg)`;
             letterS.style.transform = `translate(100px, 185px) rotate(${displayH}deg)`;
