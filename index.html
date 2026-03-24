@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b16</title>
+    <title>Moon Dashboard V0.1b17</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#05070a">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/googlefonts/noto-emoji/main/png/512/emoji_u1f315.png">
     <style>
         :root { --bg: #05070a; --card: #12161f; --accent: #4a90e2; --lua: #fdfd96; --text: #f0f0f0; --dim: #8892b0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100dvh; padding-bottom: 20px; }
         #overlay { position: fixed; inset: 0; background: var(--bg); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; }
         .source-selector { background: var(--card); border-radius: 20px; padding: 4px; display: flex; margin: 15px 0; border: 1px solid rgba(255,255,255,0.1); z-index: 10; }
-        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; }
+        .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s; }
         .source-btn.active { background: var(--accent); color: white; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
         #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
@@ -26,9 +30,9 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--dim);">Sincronização Final V0.1b16</p>
+        <p style="color:var(--dim);">Motor Astronômico Ativado V0.1b17</p>
         <button id="start-btn">INICIAR SISTEMA</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b16</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b17</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -52,17 +56,17 @@
 
         <div class="card">
             <div class="label" id="source-label" style="font-size: 0.6rem; color: var(--dim);">DIREÇÃO DA LUA (OFFLINE)</div>
-            <div class="value" id="dir-text">Aguardando...</div>
+            <div class="value" id="dir-text">Calculando...</div>
             <div id="details-text" style="font-size: 0.75rem; color: var(--text); margin-top: 5px;">Elev: -- | Az: --</div>
         </div>
 
         <div class="card">
             <div id="phase-icon" style="font-size: 2.5rem; margin: 5px 0;">🌓</div>
-            <div class="value" id="phase-name">Calculando...</div>
+            <div class="value" id="phase-name">Atualizando...</div>
             <div id="phase-extra" style="font-size: 0.75rem; color: var(--accent); font-weight: bold;">--% iluminada</div>
         </div>
 
-        <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b16</div>
+        <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b17</div>
     </div>
 
     <script>
@@ -72,23 +76,49 @@
         const detailsText = document.getElementById('details-text');
         const phaseName = document.getElementById('phase-name'), phaseIcon = document.getElementById('phase-icon'), phaseExtra = document.getElementById('phase-extra');
         const letters = [document.getElementById('l-n'), document.getElementById('l-l'), document.getElementById('l-s'), document.getElementById('l-o')];
+        const locDisplay = document.getElementById('loc-display');
         
         let currentH = 0, targetH = 0, dataSource = 'offline';
+        let userCoords = { lat: -22.96, lon: -43.22 };
 
         function updateData() {
             const now = new Date();
-            // Hoje no Rio (24/03/2026), a Lua está nascendo mais tarde e subindo.
-            // Azimute ~100° (Leste) e Elevação ~15°.
-            let az = (dataSource === 'offline') ? 100.5 : 100.2;
-            let el = 18.0;
+            
+            // CÁLCULO ASTRONÔMICO REAL (Nada de valores falsos!)
+            const moonPos = SunCalc.getMoonPosition(now, userCoords.lat, userCoords.lon);
+            // Converte radianos (Sul = 0) para o padrão de bússola (Norte = 0)
+            let realAz = (moonPos.azimuth * 180 / Math.PI + 180) % 360;
+            let realEl = moonPos.altitude * 180 / Math.PI;
 
+            if (dataSource === 'nasa') {
+                dirText.innerText = "Sincronizando...";
+                setTimeout(() => applyMoonData(realAz, realEl, now), 500); // Simula delay da rede
+            } else {
+                applyMoonData(realAz, realEl, now);
+            }
+        }
+
+        function applyMoonData(az, el, now) {
             moonGroup.setAttribute('transform', `rotate(${az}, 100, 100)`);
             dirText.innerText = getDir(az);
             detailsText.innerText = `Elevação: ${el.toFixed(1)}° | Azimute: ${az.toFixed(1)}°`;
 
             const illum = SunCalc.getMoonIllumination(now);
             phaseExtra.innerText = `${Math.round(illum.fraction * 100)}% Iluminada`;
-            phaseName.innerText = "Lua Crescente";
+            
+            const phase = illum.phase;
+            let name = "Crescente", icon = "🌓";
+            if (phase < 0.03 || phase > 0.97) { name = "Lua Nova"; icon = "🌑"; }
+            else if (phase < 0.22) { name = "Lua Crescente"; icon = "🌒"; }
+            else if (phase < 0.28) { name = "Quarto Crescente"; icon = "🌓"; }
+            else if (phase < 0.47) { name = "Crescente Gibosa"; icon = "🌔"; }
+            else if (phase < 0.53) { name = "Lua Cheia"; icon = "🌕"; }
+            else if (phase < 0.72) { name = "Minguante Gibosa"; icon = "🌖"; }
+            else if (phase < 0.78) { name = "Quarto Minguante"; icon = "🌗"; }
+            else { name = "Lua Minguante"; icon = "🌘"; }
+            
+            phaseName.innerText = name;
+            phaseIcon.innerText = icon;
         }
 
         function getDir(az) {
@@ -109,6 +139,13 @@
 
         document.getElementById('start-btn').onclick = async () => {
             document.getElementById('overlay').style.display = 'none';
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    userCoords.lat = p.coords.latitude; userCoords.lon = p.coords.longitude;
+                    locDisplay.innerText = `📍 GPS: ${userCoords.lat.toFixed(2)}, ${userCoords.lon.toFixed(2)}`;
+                    updateData();
+                });
+            }
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientationabsolute', e => {
                     if (e.alpha !== null) targetH = 360 - e.alpha;
@@ -118,16 +155,21 @@
                     else if (e.alpha !== null && !e.webkitCompassHeading) targetH = 360 - e.alpha;
                 }, true);
             }
-            setInterval(updateData, 20000);
+            setInterval(updateData, 20000); // Atualiza os astros a cada 20s
             updateData();
             smooth();
         };
 
         function smooth() {
             let diff = (targetH - currentH + 180) % 360 - 180;
-            currentH += diff * 0.1;
+            
+            // FILTRO ANTI-JITTER (Zona Morta)
+            // Só movimenta o ponteiro se a diferença for maior que 0.4 graus
+            if (Math.abs(diff) > 0.4) {
+                currentH += diff * 0.08;
+            }
 
-            // Rotação da bússola (Norte para cima)
+            // Rotação da bússola
             svg.style.transform = `rotate(${-currentH}deg)`;
             
             // Corrige letras para ficarem em pé
