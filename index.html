@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Moon Dashboard V0.1b17</title>
+    <title>Moon Dashboard V0.1b18</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
@@ -18,7 +18,7 @@
         .source-btn { border: none; background: none; color: var(--dim); padding: 8px 14px; border-radius: 16px; font-size: 0.65rem; font-weight: bold; cursor: pointer; flex: 1; transition: 0.2s; }
         .source-btn.active { background: var(--accent); color: white; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 0 20px; }
-        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; transition: transform 0.1s linear; }
+        #compass-svg { width: 65vw; max-width: 220px; margin: 10px 0; will-change: transform; }
         .cardinal-letter { font-size: 14px; font-weight: bold; fill: white; text-anchor: middle; dominant-baseline: middle; }
         .card { background: var(--card); padding: 15px; border-radius: 20px; width: 100%; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.08); text-align: center; }
         .value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
@@ -30,9 +30,9 @@
     <div id="overlay">
         <div style="font-size: 3.5rem; margin-bottom: 10px;">🌕</div>
         <h1>Moon Dashboard</h1>
-        <p style="color:var(--dim);">Motor Astronômico Ativado V0.1b17</p>
+        <p style="color:var(--dim);">Amortecedor de Bússola Ativado V0.1b18</p>
         <button id="start-btn">INICIAR SISTEMA</button>
-        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b17</div>
+        <div style="position: absolute; bottom: 15px; font-size: 0.6rem; color: var(--dim);">V0.1b18</div>
     </div>
 
     <h1 style="color:var(--accent); font-size: 1.3rem; margin: 15px 0 5px 0;">Moon Dashboard</h1>
@@ -66,7 +66,7 @@
             <div id="phase-extra" style="font-size: 0.75rem; color: var(--accent); font-weight: bold;">--% iluminada</div>
         </div>
 
-        <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b17</div>
+        <div id="loc-display" style="font-size: 0.6rem; color: var(--dim); margin-top: 5px;">📍 GPS: Rio de Janeiro | V0.1b18</div>
     </div>
 
     <script>
@@ -78,21 +78,19 @@
         const letters = [document.getElementById('l-n'), document.getElementById('l-l'), document.getElementById('l-s'), document.getElementById('l-o')];
         const locDisplay = document.getElementById('loc-display');
         
+        // currentH é o valor exibido na tela, rawTargetH é o valor bruto do sensor, targetH é o destino contínuo
         let currentH = 0, targetH = 0, dataSource = 'offline';
         let userCoords = { lat: -22.96, lon: -43.22 };
 
         function updateData() {
             const now = new Date();
-            
-            // CÁLCULO ASTRONÔMICO REAL (Nada de valores falsos!)
             const moonPos = SunCalc.getMoonPosition(now, userCoords.lat, userCoords.lon);
-            // Converte radianos (Sul = 0) para o padrão de bússola (Norte = 0)
             let realAz = (moonPos.azimuth * 180 / Math.PI + 180) % 360;
             let realEl = moonPos.altitude * 180 / Math.PI;
 
             if (dataSource === 'nasa') {
                 dirText.innerText = "Sincronizando...";
-                setTimeout(() => applyMoonData(realAz, realEl, now), 500); // Simula delay da rede
+                setTimeout(() => applyMoonData(realAz, realEl, now), 500);
             } else {
                 applyMoonData(realAz, realEl, now);
             }
@@ -148,34 +146,38 @@
             }
             if (window.DeviceOrientationEvent) {
                 window.addEventListener('deviceorientationabsolute', e => {
-                    if (e.alpha !== null) targetH = 360 - e.alpha;
+                    if (e.alpha !== null) processSensorData(360 - e.alpha);
                 }, true);
                 window.addEventListener('deviceorientation', e => {
-                    if (e.webkitCompassHeading) targetH = e.webkitCompassHeading;
-                    else if (e.alpha !== null && !e.webkitCompassHeading) targetH = 360 - e.alpha;
+                    if (e.webkitCompassHeading) processSensorData(e.webkitCompassHeading);
+                    else if (e.alpha !== null && !e.webkitCompassHeading) processSensorData(360 - e.alpha);
                 }, true);
             }
-            setInterval(updateData, 20000); // Atualiza os astros a cada 20s
+            setInterval(updateData, 20000);
             updateData();
             smooth();
         };
 
-        function smooth() {
-            let diff = (targetH - currentH + 180) % 360 - 180;
-            
-            // FILTRO ANTI-JITTER (Zona Morta)
-            // Só movimenta o ponteiro se a diferença for maior que 0.4 graus
-            if (Math.abs(diff) > 0.4) {
-                currentH += diff * 0.08;
-            }
+        function processSensorData(rawHeading) {
+            // Lida perfeitamente com a transição do ângulo 359º para 0º
+            let diff = (rawHeading - targetH + 180) % 360 - 180;
+            targetH += diff;
+        }
 
-            // Rotação da bússola
-            svg.style.transform = `rotate(${-currentH}deg)`;
+        function smooth() {
+            // AMORTECEDOR PESADO (Fator de interpolação reduzido de 0.08 para 0.02)
+            // A bússola absorverá tremores da mão e fará movimentos fluidos
+            let diffAnim = targetH - currentH;
+            currentH += diffAnim * 0.02;
+
+            // Rotação visual normalizada
+            let displayH = ((currentH % 360) + 360) % 360;
             
-            // Corrige letras para ficarem em pé
+            svg.style.transform = `rotate(${-displayH}deg)`;
+            
             letters.forEach(l => {
                 const b = l.getAttribute('transform').split(' rotate')[0];
-                l.setAttribute('transform', `${b} rotate(${currentH})`);
+                l.setAttribute('transform', `${b} rotate(${displayH})`);
             });
             requestAnimationFrame(smooth);
         }
